@@ -1,0 +1,8 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/adios2
+    docker:
+      - image: centos:centos7.3.1611
+    steps:
+      - checkout
