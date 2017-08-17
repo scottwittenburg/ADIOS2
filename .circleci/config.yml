@@ -1,14 +1,14 @@
 version: 2
 jobs:
   build:
-    working_directory: /home/adios2
+    working_directory: /home/adios2/adios2
     docker:
       - image: scottwittenburg/adios:adios-test1
     steps:
       - checkout
       - run:
           name: Create build dir
-          command: 'mkdir build && cd build'
+          command: 'mkdir /home/adios2/build && cd /home/adios2/build'
       - run:
           name: Configure
           command: 'cmake ../adios2'
