@@ -1,8 +1,37 @@
 version: 2
 jobs:
   build:
-    working_directory: ~/adios2
+    working_directory: /home/adios2
     docker:
-      - image: centos:centos7.3.1611
+      - image: scottwittenburg/adios:adios-test1
     steps:
       - checkout
+      - run:
+          name: Create build dir
+          command: 'mkdir build && cd build'
+      - run:
+          name: Configure
+          command: 'cmake ../adios2'
+      - run:
+          name: build
+          command: 'gmake'
+  test:
+    docker:
+      - image: scottwittenburg/adios:adios-test1
+    steps:
+      - checkout
+      - run:
+          name: Test
+          command: ctest
+      - store_artifacts:
+          path: test-results.xml
+          prefix: tests
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build
