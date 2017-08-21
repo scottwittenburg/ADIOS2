@@ -3,15 +3,9 @@ jobs:
   build:
     working_directory: /home/adios2/adios2
     docker:
-      - image: scottwittenburg/adios:adios-test1
+      - image: scottwittenburg/adios:adios-test3
     steps:
       - checkout
       - run:
-          name: Build and test
-          command: 'mkdir /home/adios2/build && cd /home/adios2/build && cmake ../adios2 && gmake'
-      - run:
-          name: Test
-          command: 'cd /home/adios2/build && ctest'
-      - store_artifacts:
-          path: test-results.xml
-          prefix: tests
+          name: Run dashboard scripts
+          command: 'cd /home/adios2 && bash adios2/scripts/dashboard/runOnCircle.sh'
