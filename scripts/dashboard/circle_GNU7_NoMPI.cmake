@@ -8,7 +8,9 @@ set(CTEST_TEST_ARGS PARALLEL_LEVEL 1)
 #set(dashboard_model Nightly)
 set(dashboard_root_name "Builds/GCC-7.1.0_NoMPI")
 
+set(MODULE_COMMAND "module")
 include(${CMAKE_CURRENT_LIST_DIR}/EnvironmentModules.cmake)
+
 #module(purge)
 module(load gnu7)
 #module(load hdf5)
@@ -32,7 +34,7 @@ ADIOS_USE_DataMan_ZeroMQ:BOOL=ON
 
 set(CTEST_SOURCE_DIRECTORY "/home/adios2/adios2")
 
-message(status "CirclCI is testing branch $ENV{CIRCLE_BRANCH}")
+message(STATUS "CirclCI is testing branch $ENV{CIRCLE_BRANCH}")
 set(dashboard_git_branch $ENV{CIRCLE_BRANCH})
 
 include(${CMAKE_CURRENT_LIST_DIR}/adios_common.cmake)
