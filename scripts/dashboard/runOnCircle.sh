@@ -3,9 +3,6 @@
 BASEDIR=$(readlink -f $(dirname ${BASH_SOURCE}))
 cd ${BASEDIR}
 
-echo "Updating scripts..."
-git pull --ff-only
-cd ${HOME}
 mkdir -p ${BASEDIR}/../../../Logs
 
 DASHBOARD_CONFIGS="GNU7_NoMPI"
