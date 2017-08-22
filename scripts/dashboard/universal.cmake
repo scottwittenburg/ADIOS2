@@ -125,6 +125,7 @@ endif()
 
 # Support initial checkout if necessary.
 if(NOT EXISTS "${CTEST_SOURCE_DIRECTORY}" AND NOT DEFINED CTEST_CHECKOUT_COMMAND)
+  message(STATUS "Going to generate an initial checkout script")
   get_filename_component(_name "${CTEST_SOURCE_DIRECTORY}" NAME)
   if(CTEST_GIT_COMMAND)
     execute_process(COMMAND ${CTEST_GIT_COMMAND} --version OUTPUT_VARIABLE output)
