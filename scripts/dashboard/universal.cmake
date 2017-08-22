@@ -249,11 +249,22 @@ ${dashboard_cache}
 endmacro(write_cache)
 
 # Start with a fresh build tree.
-file(MAKE_DIRECTORY "${CTEST_BINARY_DIRECTORY}")
-if(NOT "${CTEST_SOURCE_DIRECTORY}" STREQUAL "${CTEST_BINARY_DIRECTORY}")
+# This is broken, but was fixed in cmake two years ago:
+# https://github.com/Kitware/CMake/commit/cb56d71de1bd40e06db17cb0266d1fbeabea75a3
+#
+
+# file(MAKE_DIRECTORY "${CTEST_BINARY_DIRECTORY}")
+# if(NOT "${CTEST_SOURCE_DIRECTORY}" STREQUAL "${CTEST_BINARY_DIRECTORY}")
+#   message("Clearing build tree...")
+#   ctest_empty_binary_directory(${CTEST_BINARY_DIRECTORY})
+# endif()
+
+if(EXISTS "${CTEST_BINARY_DIRECTORY}" AND
+    NOT "${CTEST_SOURCE_DIRECTORY}" STREQUAL "${CTEST_BINARY_DIRECTORY}")
   message("Clearing build tree...")
   ctest_empty_binary_directory(${CTEST_BINARY_DIRECTORY})
 endif()
+file(MAKE_DIRECTORY "${CTEST_BINARY_DIRECTORY}")
 
 set(dashboard_continuous 0)
 if("${dashboard_model}" STREQUAL "Continuous")
