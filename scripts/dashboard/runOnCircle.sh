@@ -7,9 +7,15 @@ mkdir -p ${BASEDIR}/../../../Logs
 
 DASHBOARD_CONFIGS="GNU7_NoMPI"
 
-for CONFIG in ${DASHBOARD_CONFIGS}
-do
-  echo ${CONFIG}
-  LOG=${BASEDIR}/../../../Logs/${CONFIG}
-  ctest -S ${BASEDIR}/circle_${CONFIG}.cmake -VV 1>${LOG}.out 2>${LOG}.err
-done
+# First do the system tools build without mpi
+CONFIG="GNU4_NoMPI"
+
+# unload any modules just in case
+module purge
+
+echo ${CONFIG}
+LOG=${BASEDIR}/../../../Logs/${CONFIG}
+ctest -S ${BASEDIR}/circle_${CONFIG}.cmake -VV 1>${LOG}.out 2>${LOG}.err
+
+# Next do the gnu7 parallel build
+### Not yet implemented

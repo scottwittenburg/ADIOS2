@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: /home/adios2/adios2
     docker:
-      - image: scottwittenburg/adios:adios-test3
+      - image: scottwittenburg/adios:adios2testing
     steps:
       - checkout
       - run:
