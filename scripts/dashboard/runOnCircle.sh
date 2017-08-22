@@ -1,4 +1,7 @@
-#!/bin/bash
+#!/usr/bin/bash
+
+# Initialize modules system
+. /opt/ohpc/admin/lmod/lmod/init/bash >/dev/null
 
 BASEDIR=$(readlink -f $(dirname ${BASH_SOURCE}))
 cd ${BASEDIR}
@@ -13,7 +16,7 @@ CONFIG="GNU4_NoMPI"
 # unload any modules just in case
 module purge
 
-echo ${CONFIG}
+echo "Running configuration ${CONFIG}"
 LOG=${BASEDIR}/../../../Logs/${CONFIG}
 ctest -S ${BASEDIR}/circle_${CONFIG}.cmake -VV 1>${LOG}.out 2>${LOG}.err
 
