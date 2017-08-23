@@ -1,7 +1,7 @@
 version: 2
 jobs:
   build:
-    working_directory: /home/adios2/adios2
+    working_directory: /home
     docker:
       - image: scottwittenburg/adios:adios2testing
     steps:
