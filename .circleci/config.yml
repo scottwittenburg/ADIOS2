@@ -8,4 +8,4 @@ jobs:
       - checkout
       - run:
           name: Run dashboard scripts
-          command: 'cd /home/adios2 && bash adios2/scripts/dashboard/runOnCircle.sh'
+          command: 'cd /home/adios2 && bash hidecirclesource/scripts/dashboard/runOnCircle.sh'
