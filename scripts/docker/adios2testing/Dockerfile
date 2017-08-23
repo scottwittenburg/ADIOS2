@@ -32,4 +32,5 @@ RUN ./bootstrap ; make ; make install
 
 WORKDIR /home/adios2
 
-RUN rm cmake-3.8.2.tar.gz
+RUN rm cmake-3.8.2.tar.gz && \
+    mkdir -p /home/adios2/hidecirclesource
