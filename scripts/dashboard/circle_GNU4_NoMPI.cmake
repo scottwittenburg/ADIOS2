@@ -20,6 +20,7 @@ ADIOS_USE_DataMan_ZeroMQ:BOOL=ON
 ")
 
 set(CTEST_SOURCE_DIRECTORY "/home/adios2/adios2")
+set(CTEST_GIT_COMMAND "/usr/bin/true")
 
 message(STATUS "CirclCI is testing branch $ENV{CIRCLE_BRANCH} (dashboard: ${dashboard_root_name})")
 set(dashboard_git_branch $ENV{CIRCLE_BRANCH})
