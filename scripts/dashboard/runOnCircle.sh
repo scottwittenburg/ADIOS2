@@ -1,14 +1,7 @@
 #!/usr/bin/bash
 
-printenv
-
 # Initialize modules system
-. /opt/ohpc/admin/lmod/lmod/init/bash >/dev/null
-. /opt/ohpc/admin/lmod/lmod/init/profile >/dev/null
-
-echo "Just sourced lmod init bash script, new environment is:"
-
-printenv
+. /etc/profile.d/lmod.sh >/dev/null
 
 BASEDIR=$(readlink -f $(dirname ${BASH_SOURCE}))
 cd ${BASEDIR}

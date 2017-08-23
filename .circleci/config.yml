@@ -4,8 +4,6 @@ jobs:
     working_directory: /home/adios2/adios2
     docker:
       - image: scottwittenburg/adios:adios2testing
-        entrypoint: [/usr/bin/sh, -c]
-        command: [bash]
     steps:
       - checkout
       - run:
