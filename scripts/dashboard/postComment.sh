@@ -4,7 +4,7 @@ PULLREQUESTS=${CIRCLE_PULL_REQUESTS}   # comma-separated list of pr urls
 REPO=${CIRCLE_PROJECT_REPONAME}        # repo name
 OWNER=${CIRCLE_PROJECT_USERNAME}       # organization or user the repo lives under
 TOKEN=${GITHUB_API_KEY}                # added to env via CircleCI project settings
-COMMIT=${CIRCLE_BRANCH}                # sha being tested
+COMMIT=${CIRCLE_SHA1}                  # sha being tested
 COMPAREURL=${CIRCLE_COMPARE_URL}       # CircleCI provides url for comparing this sha with previous
 
 SHASNIP=$(echo $COMMIT | cut -c1-7)    # Grab first 7 characters of the sha to use as link text
