@@ -11,6 +11,9 @@ set(dashboard_root_name "Builds/GCC-4.8.5_NoMPI")
 set(dashboard_binary_name "GNU4_NoMPI")             # Keep build trees separate for each build
 set(dashboard_git_branch $ENV{CIRCLE_BRANCH})       # Let dashboard know what branch CircleCI is testing
 
+include(${CMAKE_CURRENT_LIST_DIR}/EnvironmentModules.cmake)
+module(purge)
+
 set(ENV{CC}  gcc)
 set(ENV{CXX} g++)
 set(ENV{FC}  gfortran)
