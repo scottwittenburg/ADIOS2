@@ -20,8 +20,8 @@ ADIOS_USE_DataMan_ZeroMQ:BOOL=ON
 ")
 
 set(dashboard_binary_name "GNU4_NoMPI")             # Keep build trees separate for each build
-set(CTEST_SOURCE_DIRECTORY "/home/adios2/adios2")   # Avoid checking out the source before building
-set(CTEST_GIT_COMMAND "/usr/bin/true")              # Avoid the red update failures on the dashboard
+# set(CTEST_SOURCE_DIRECTORY "/home/adios2/adios2")   # Avoid checking out the source before building
+# set(CTEST_GIT_COMMAND "/usr/bin/true")              # Avoid the red update failures on the dashboard
 set(dashboard_git_branch $ENV{CIRCLE_BRANCH})       # Let dashboard know what branch CircleCI is testing
 
 include(${CMAKE_CURRENT_LIST_DIR}/adios_common.cmake)

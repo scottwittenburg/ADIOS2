@@ -20,17 +20,17 @@ echo "Running configuration ${CONFIG}"
 LOG=${BASEDIR}/../../../Logs/${CONFIG}
 ctest -S ${BASEDIR}/circle_${CONFIG}.cmake -VV 1>${LOG}.out 2>${LOG}.err
 
-# # Next do the gnu7 parallel build
-# CONFIG="GNU7_OpenMPI"
+# Next do the gnu7 parallel build
+CONFIG="GNU7_OpenMPI"
 
-# # Unload any loaded modules
-# module purge
+# Unload any loaded modules
+module purge
 
-# module load gnu7
-# module load openmpi
-# module load phdf5
-# module load netcdf
+module load gnu7
+module load openmpi
+module load phdf5
+module load netcdf
 
-# echo "Running configuration ${CONFIG}"
-# LOG=${BASEDIR}/../../../Logs/${CONFIG}
-# ctest -S ${BASEDIR}/circle_${CONFIG}.cmake -VV 1>${LOG}.out 2>${LOG}.err
+echo "Running configuration ${CONFIG}"
+LOG=${BASEDIR}/../../../Logs/${CONFIG}
+ctest -S ${BASEDIR}/circle_${CONFIG}.cmake -VV 1>${LOG}.out 2>${LOG}.err
