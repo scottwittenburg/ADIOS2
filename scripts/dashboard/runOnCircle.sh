@@ -8,7 +8,8 @@ cd ${BASEDIR}
 
 mkdir -p ${BASEDIR}/../../../Logs
 
-DASHBOARD_CONFIGS="GNU7_NoMPI"
+# Post a comment on the PR linking to the CDash results
+. postComment.sh >/dev/null || true
 
 # First do the system tools build without mpi
 CONFIG="GNU4_NoMPI"
