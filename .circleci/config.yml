@@ -9,3 +9,5 @@ jobs:
       - run:
           name: Run dashboard scripts
           command: 'cd /home/adios2 && bash hidecirclesource/scripts/dashboard/runOnCircle.sh'
+      - store_artifacts:
+          path: /home/adios2/Logs
