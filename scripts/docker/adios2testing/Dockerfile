@@ -3,8 +3,8 @@ FROM centos:centos7.3.1611
 RUN yum -y update && \
     yum -y install \
         bzip2-devel.x86_64 \
-    	curl \
-    	git \
+        curl \
+        git \
         gcc \
         gcc-c++ \
         gcc-gfortran \
@@ -23,14 +23,8 @@ RUN yum -y update && \
 
 WORKDIR /home/adios2
 
-RUN curl -O https://cmake.org/files/v3.8/cmake-3.8.2.tar.gz ; \
-    tar -zxvf cmake-3.8.2.tar.gz
-
-WORKDIR cmake-3.8.2
-
-RUN ./bootstrap ; make ; make install
-
-WORKDIR /home/adios2
-
-RUN rm cmake-3.8.2.tar.gz && \
+RUN curl -O https://cmake.org/files/v3.5/cmake-3.5.0-Linux-x86_64.tar.gz && \
+    tar -zxvf cmake-3.5.0-Linux-x86_64.tar.gz && \
+    rm -rf cmake-3.5.0-Linux-x86_64.tar.gz && \
+    echo $'#!/usr/bin/bash\n\nexport PATH=$PATH:/home/adios2/cmake-3.5.0-Linux-x86_64/bin\n' > .bashrc && \
     mkdir -p /home/adios2/hidecirclesource

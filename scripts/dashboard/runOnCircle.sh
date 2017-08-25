@@ -1,5 +1,8 @@
 #!/usr/bin/bash
 
+# Make sure we can find cmake
+. /home/adios2/.bashrc
+
 # Initialize modules system
 . /etc/profile.d/lmod.sh >/dev/null
 
@@ -9,7 +12,7 @@ cd ${BASEDIR}
 mkdir -p ${BASEDIR}/../../../Logs
 
 # Post a comment on the PR linking to the CDash results
-. postComment.sh >/dev/null || true
+#. postComment.sh >/dev/null || true
 
 # Configure a set of dashboards to run
 DASHBOARD_CONFIGS="GNU4_NoMPI GNU7_OpenMPI"
