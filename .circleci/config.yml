@@ -4,10 +4,10 @@ jobs:
     working_directory: /home/adios2/hidecirclesource
     docker:
       - image: scottwittenburg/adios:adios2testing
+    parallelism: 2
     steps:
       - checkout
       - run:
-          name: Run dashboard scripts
-          command: 'cd /home/adios2 && bash hidecirclesource/scripts/dashboard/runOnCircle.sh'
-      - store_artifacts:
-          path: /home/adios2/Logs
+        type: shell
+        command: |
+          circleci tests glob "scripts/dashboard/circle_*.cmake" | circleci tests split | xargs bash scripts/dashboard/runOnCircle.sh
