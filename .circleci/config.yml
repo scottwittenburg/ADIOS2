@@ -8,6 +8,7 @@ jobs:
     steps:
       - checkout
       - run:
+        name: Run dashboard scripts
         type: shell
         command: |
           circleci tests glob "scripts/dashboard/circle_*.cmake" | circleci tests split | xargs bash scripts/dashboard/runOnCircle.sh
