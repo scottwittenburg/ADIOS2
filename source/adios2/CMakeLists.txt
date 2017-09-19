@@ -2,7 +2,7 @@
 # Distributed under the OSI-approved Apache License, Version 2.0.  See
 # accompanying file Copyright.txt for details.
 #------------------------------------------------------------------------------#
-  
+
 add_library(adios2
   core/Attribute.cpp core/Attribute.tcc
   core/AttributeBase.cpp
@@ -16,7 +16,7 @@ add_library(adios2
   core/Variable.cpp core/Variable.tcc
   core/VariableBase.cpp
   core/VariableCompound.cpp core/VariableCompound.tcc
-  
+
 #helper
   helper/adiosDynamicBinder.h  helper/adiosDynamicBinder.cpp
   helper/adiosMath.cpp
@@ -25,7 +25,7 @@ add_library(adios2
   helper/adiosSystem.cpp
   helper/adiosType.cpp
   helper/adiosXML.cpp
-  
+
 #  engine/bp/BPFileReader.cpp
   engine/bp/BPFileWriter.cpp engine/bp/BPFileWriter.tcc
 
@@ -34,8 +34,8 @@ add_library(adios2
   engine/plugin/PluginEngineInterface.h engine/plugin/PluginEngineInterface.cpp
 
   toolkit/capsule/Capsule.cpp
-  toolkit/capsule/heap/STLVector.cpp 
- 
+  toolkit/capsule/heap/STLVector.cpp
+
   toolkit/format/bp1/BP1Base.cpp toolkit/format/bp1/BP1Base.tcc
   toolkit/format/bp1/BP1Aggregator.cpp
   toolkit/format/bp1/BP1Writer.cpp toolkit/format/bp1/BP1Writer.tcc
@@ -45,10 +45,9 @@ add_library(adios2
   toolkit/transport/Transport.cpp
   toolkit/transport/file/FilePointer.cpp
   toolkit/transport/file/FileStream.cpp
-  
+
   toolkit/transportman/TransportMan.cpp
   toolkit/transportman/dataman/DataMan.cpp
-  
 )
 target_include_directories(adios2
   PUBLIC
@@ -80,7 +79,6 @@ target_sources(adios2 PRIVATE
 )
 target_link_libraries(adios2 PRIVATE NLohmannJson)
 
-
 if(ADIOS2_HAVE_BZip2)
   target_sources(adios2 PRIVATE transform/compress/CompressBZip2.cpp)
   target_link_libraries(adios2 PRIVATE BZip2::BZip2)
@@ -101,9 +99,9 @@ if(ADIOS2_HAVE_ADIOS1)
   target_sources(adios2 PRIVATE
     engine/adios1/ADIOS1Reader.cpp
     engine/adios1/ADIOS1Writer.cpp
-    
+
     toolkit/interop/adios1/ADIOS1Common.cpp toolkit/interop/adios1/ADIOS1Common.tcc
-    
+
   )
   target_link_libraries(adios2 PRIVATE adios1::adios)
 endif()
@@ -120,6 +118,17 @@ if(ADIOS2_HAVE_HDF5)
     toolkit/interop/hdf5/HDF5Common.cpp toolkit/interop/hdf5/HDF5Common.tcc
   )
   target_link_libraries(adios2 PRIVATE ${HDF5_C_LIBRARIES})
+endif()
+
+if(ADIOS2_HAVE_Python)
+  target_sources(adios2 PRIVATE
+    engine/pyplugin/PythonInterpreter.h
+    engine/pyplugin/PythonInterpreter.cpp
+    engine/pyplugin/PythonPluginEngine.h
+    engine/pyplugin/PythonPluginEngine.cpp
+  )
+  target_include_directories(adios2 PRIVATE ${PYBIND11_INCLUDE_DIR} ${PYTHON_INCLUDE_DIRS})
+  target_link_libraries(adios2 PRIVATE pybind11::embed)
 endif()
 
 # Set library version information
