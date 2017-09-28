@@ -16,6 +16,11 @@
 #include "adios2/engine/plugin/PluginEngine.h"
 #include "adios2/helper/adiosFunctions.h" //BuildParametersMap
 
+#ifdef ADIOS2_HAVE_PYTHON
+// FIXME: This doesn't seem right, but it works
+#include "../../../bindings/python/PythonEngine.h"
+#endif
+
 #ifdef ADIOS2_HAVE_DATAMAN // external dependencies
 #include "adios2/engine/dataman/DataManReader.h"
 #include "adios2/engine/dataman/DataManWriter.h"
@@ -298,6 +303,15 @@ std::shared_ptr<Engine> IO::Open(const std::string &name,
     else if (m_EngineType == "PluginEngine")
     {
         engine = std::make_shared<PluginEngine>(*this, name, openMode, mpiComm);
+    }
+    else if (m_EngineType == "PythonEngine")
+    {
+#ifdef ADIOS2_HAVE_PYTHON
+        engine = std::make_shared<PythonEngine>(*this, name, openMode, mpiComm);
+#else
+        throw std::invalid_argument("ERROR: this version didn't compile with "
+                                    "Python enabled, can't use PythonEngine\n");
+#endif
     }
     else
     {
