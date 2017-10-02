@@ -11,6 +11,7 @@
 #include "PythonPluginEngine.h"
 
 #include "PythonInterpreter.h"
+#include "PythonInstanceBuilder.h"
 
 #include <functional>
 #include <map>
@@ -129,32 +130,9 @@ void PythonPluginEngine::Init()
     }
     std::string pluginClassName = paramPluginClassIt->second;
 
-    pybind11::dict globals = pybind11::globals();
-
-    if (globals.contains(pluginClassName.c_str()))
-    {
-        // Case where engine class is already available
-        pybind11::object engineConstructor =
-            globals[pluginClassName.c_str()];
-        m_Impl->enginePyObject = engineConstructor();
-    }
-    else if (pluginModuleName != nullptr)
-    {
-        // Case where we were given the module name to import
-        pybind11::object engineModule =
-            pybind11::module::import((*pluginModuleName).c_str());
-        pybind11::object engineConstructor =
-            engineModule.attr(pluginClassName.c_str());
-        m_Impl->enginePyObject = engineConstructor();
-    }
-    else
-    {
-        // Unable to instantiate the engine in this case
-        throw std::runtime_error("PythonEngine: Engine class was not present "
-                                 "in main module, nor was a plugin module "
-                                 "name provided in the parameters.  Unable to "
-                                 "instantiate python engine.");
-    }
+    m_Impl->enginePyObject =
+        adios2::PythonInstanceBuilder::BuildInstance(pluginClassName,
+                                                     pluginModuleName);
 }
 
 #define define(T)                                                              \

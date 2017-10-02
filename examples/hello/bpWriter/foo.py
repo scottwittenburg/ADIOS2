@@ -2,13 +2,10 @@ from mpi4py import MPI
 import numpy
 import adios2
 
-
 # from dummyEngine import DummyEngine
 # import dummyEngine
 
-print("Inside testPythonEngine.py, module-level print statement")
-
-if __name__ == "__main__":
+def do_adios_stuff():
 	# print('inside testPythonEngine.py: static member is initially set to %d' % DummyEngine.StaticMemberVariable)
 	# DummyEngine.StaticMemberVariable += 1
 	# print('inside testPythonEngine.py: after incrementing static member, it is now %d' % DummyEngine.StaticMemberVariable)
@@ -40,5 +37,7 @@ if __name__ == "__main__":
 	# ADIOS Engine
 	bpFileWriter = bpIO.Open("npArray.bp", adios2.OpenModeWrite)
 	bpFileWriter.Write(ioArray, myArray)
+
+	# print('inside testPythonEngine.py: after calling Write, static member is now %d' % dummyEngine.DummyEngine.StaticMemberVariable)
 
 	bpFileWriter.Close()
