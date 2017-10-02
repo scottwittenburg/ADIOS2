@@ -66,13 +66,15 @@ void PythonPluginEngine::Release() {
 void PythonPluginEngine::Advance(const float timeoutSeconds)
 {
     // m_Impl->m_Plugin->Advance(timeoutSeconds);
-    std::cout << "PythonPluginEngine::Advance(timeoutSeconds)" << std::endl;
+    std::cout << "PythonPluginEngine::Advance(timeoutSeconds)"
+              << std::endl;
 }
 
 void PythonPluginEngine::Advance(const AdvanceMode mode, const float timeoutSeconds)
 {
     // m_Impl->m_Plugin->Advance(mode, timeoutSeconds);
-    std::cout << "PythonPluginEngine::Advance(mode, timeoutSeconds)" << std::endl;
+    std::cout << "PythonPluginEngine::Advance(mode, timeoutSeconds)"
+              << std::endl;
 }
 
 void PythonPluginEngine::AdvanceAsync(const AdvanceMode mode,
@@ -99,8 +101,7 @@ void PythonPluginEngine::Close(const int transportIndex)
 
 void PythonPluginEngine::Init()
 {
-    std::cout << "PythonPluginEngine::Init" << std::endl;
-
+    // Initialize python interpreter if it's not already running
     adios2::PythonInterpreter::instance().initialize();
 
     auto paramPluginNameIt = m_IO.m_Parameters.find("PluginName");
@@ -111,14 +112,13 @@ void PythonPluginEngine::Init()
     }
     m_Impl->m_PluginName = paramPluginNameIt->second;
 
-    // Get the python engine plugin module name
+    // Get the python engine plugin module name, if provided
+    std::string* pluginModuleName = nullptr;
     auto paramPluginModuleIt = m_IO.m_Parameters.find("PluginModule");
-    if (paramPluginModuleIt == m_IO.m_Parameters.end())
+    if (paramPluginModuleIt != m_IO.m_Parameters.end())
     {
-        throw std::invalid_argument("PythonPluginEngine: PluginModule must be "
-                                    "specified in engine parameters");
+        pluginModuleName = &(paramPluginModuleIt->second);
     }
-    std::string pluginModuleName = paramPluginModuleIt->second;
 
     // Get the python engine plugin class name
     auto paramPluginClassIt = m_IO.m_Parameters.find("PluginClass");
@@ -129,26 +129,32 @@ void PythonPluginEngine::Init()
     }
     std::string pluginClassName = paramPluginClassIt->second;
 
-    // Load the module and instantiate the class
-    // pybind11::scoped_interpreter guard;
+    pybind11::dict globals = pybind11::globals();
 
-    // Try to import the 'dummyEngine' module
-    pybind11::object engineModule = pybind11::module::import(pluginModuleName.c_str());
-
-    std::cout << "'" << pluginModuleName << "' module: " << std::endl;
-    std::cout << engineModule << std::endl;
-
-    pybind11::object engineConstructor = engineModule.attr(pluginClassName.c_str());
-
-    std::cout << "contstructor attribute: " << std::endl;
-    std::cout << engineConstructor << std::endl;
-
-    // m_Impl->enginePyObject = engineConstructor(m_Impl->m_PluginName, adios2::OpenMode::Write);
-    m_Impl->enginePyObject = engineConstructor();
-    // m_Impl->enginePyObject.inc_ref();
-
-    std::cout << "engine instance: " << std::endl;
-    std::cout << m_Impl->enginePyObject << std::endl;
+    if (globals.contains(pluginClassName.c_str()))
+    {
+        // Case where engine class is already available
+        pybind11::object engineConstructor =
+            globals[pluginClassName.c_str()];
+        m_Impl->enginePyObject = engineConstructor();
+    }
+    else if (pluginModuleName != nullptr)
+    {
+        // Case where we were given the module name to import
+        pybind11::object engineModule =
+            pybind11::module::import((*pluginModuleName).c_str());
+        pybind11::object engineConstructor =
+            engineModule.attr(pluginClassName.c_str());
+        m_Impl->enginePyObject = engineConstructor();
+    }
+    else
+    {
+        // Unable to instantiate the engine in this case
+        throw std::runtime_error("PythonEngine: Engine class was not present "
+                                 "in main module, nor was a plugin module "
+                                 "name provided in the parameters.  Unable to "
+                                 "instantiate python engine.");
+    }
 }
 
 #define define(T)                                                              \

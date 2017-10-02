@@ -2,39 +2,43 @@ from mpi4py import MPI
 import numpy
 import adios2
 
-from dummyEngine import DummyEngine
+# from dummyEngine import DummyEngine
 
-print('inside testPythonEngine.py: static member is initially set to %d' % DummyEngine.StaticMemberVariable)
-DummyEngine.StaticMemberVariable += 1
-print('inside testPythonEngine.py: after incrementing static member, it is now %d' % DummyEngine.StaticMemberVariable)
+print("Inside testPythonEngine.py, module-level print statement")
 
-# MPI
-comm = MPI.COMM_WORLD
-rank = comm.Get_rank()
-size = comm.Get_size()
+if __name__ == "__main__":
+	# print('inside testPythonEngine.py: static member is initially set to %d' % DummyEngine.StaticMemberVariable)
+	# DummyEngine.StaticMemberVariable += 1
+	# print('inside testPythonEngine.py: after incrementing static member, it is now %d' % DummyEngine.StaticMemberVariable)
 
-# User data
-myArray = numpy.array([0., 1., 2., 3., 4., 5., 6., 7., 8., 9.])
-Nx = myArray.size
+	# MPI
+	comm = MPI.COMM_WORLD
+	rank = comm.Get_rank()
+	size = comm.Get_size()
 
-# ADIOS MPI Communicator, debug mode
-adios = adios2.ADIOS(comm, adios2.DebugON)
+	# User data
+	myArray = numpy.array([0., 1., 2., 3., 4., 5., 6., 7., 8., 9.])
+	Nx = myArray.size
 
-# ADIOS IO
-bpIO = adios.DeclareIO("BPFile_N2N")
+	# ADIOS MPI Communicator, debug mode
+	adios = adios2.ADIOS(comm, adios2.DebugON)
 
-# ADIOS Variable name, shape, start, offset, constant dims
-ioArray = bpIO.DefineVariable(
-    "bpArray", [size * Nx], [rank * Nx], [Nx], adios2.ConstantDims)
+	# ADIOS IO
+	bpIO = adios.DeclareIO("BPFile_N2N")
 
-# Engine derived class, spawned to start IO operations
-bpIO.SetEngine("PythonPluginEngine")
-bpIO.SetParameters(PluginName="FirstPythonPlugin", PluginModule="dummyEngine", PluginClass="DummyEngine")
+	# ADIOS Variable name, shape, start, offset, constant dims
+	ioArray = bpIO.DefineVariable(
+	    "bpArray", [size * Nx], [rank * Nx], [Nx], adios2.ConstantDims)
 
-# ADIOS Engine
-bpFileWriter = bpIO.Open("npArray.bp", adios2.OpenModeWrite)
-bpFileWriter.Write(ioArray, myArray)
+	# Engine derived class, spawned to start IO operations
+	bpIO.SetEngine("PythonPluginEngine")
+	bpIO.SetParameters(PluginName="FirstPythonPlugin", PluginModule="dummyEngine", PluginClass="DummyEngine")
+	# bpIO.SetParameters(PluginName="FirstPythonPlugin", PluginClass="DummyEngine")
 
-print('inside testPythonEngine.py: after calling Write, static member is now %d' % DummyEngine.StaticMemberVariable)
+	# ADIOS Engine
+	bpFileWriter = bpIO.Open("npArray.bp", adios2.OpenModeWrite)
+	bpFileWriter.Write(ioArray, myArray)
 
-bpFileWriter.Close()
+	# print('inside testPythonEngine.py: after calling Write, static member is now %d' % DummyEngine.StaticMemberVariable)
+
+	bpFileWriter.Close()

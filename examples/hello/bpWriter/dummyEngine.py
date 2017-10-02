@@ -2,6 +2,8 @@
 # import adios2
 # from adios2 import EnginePy
 
+print("Inside dummyEngine.py, module-level print statement")
+
 # class DummyEngine(adios2.EnginePy):
 class DummyEngine():
     StaticMemberVariable = 0
