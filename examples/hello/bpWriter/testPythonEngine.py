@@ -3,7 +3,7 @@ import numpy
 import adios2
 
 
-# from dummyEngine import DummyEngine
+from dummyEngine import DummyEngine
 # import dummyEngine
 
 print("Inside testPythonEngine.py, module-level print statement")
@@ -34,8 +34,8 @@ if __name__ == "__main__":
 
 	# Engine derived class, spawned to start IO operations
 	bpIO.SetEngine("PythonPluginEngine")
-	bpIO.SetParameters(PluginName="FirstPythonPlugin", PluginModule="dummyEngine", PluginClass="DummyEngine")
-	# bpIO.SetParameters(PluginName="FirstPythonPlugin", PluginClass="DummyEngine")
+	# bpIO.SetParameters(PluginName="FirstPythonPlugin", PluginModule="dummyEngine", PluginClass="DummyEngine")
+	bpIO.SetParameters(PluginName="FirstPythonPlugin", PluginClass="DummyEngine")
 
 	# ADIOS Engine
 	bpFileWriter = bpIO.Open("npArray.bp", adios2.OpenModeWrite)

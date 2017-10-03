@@ -11,7 +11,7 @@ class DummyEngine():
     # def __init__(self, name, openMode):
     def __init__(self):
         # EnginePy.__init__(self, name, openMode, mpiComm)
-        print('Constructing DummyEngine python class')
+        print('Inside DummyEngine python constructor')
         # print(name, openMode)
 
     def Write(self):
