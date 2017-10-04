@@ -16,7 +16,7 @@ namespace adios2
 
 /** @brief Singleton class for encapsulating the embedded interpreter.
            Ensures that the interpreter is initialized/finalized at static
-           initialization/destruction.  It is left to the user to ensure
+           initialization/deinitialization.  It is left to the user to ensure
            that their python modules can be found on the python path.
   */
 class PythonInterpreter

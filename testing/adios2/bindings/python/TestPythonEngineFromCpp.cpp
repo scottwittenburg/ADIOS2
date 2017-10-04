@@ -3,42 +3,72 @@
  * accompanying file Copyright.txt for details.
  */
 
-#include <vector>
 #include <adios2.h>
 #include <gtest/gtest.h>
 
+/**
+ * Test that with the proper plugin module and class specified, we
+ * can successfully create the python engine from C++.
+ */
 TEST(PythonEngineTest, CreatePythonEngineFromCPlusPlus)
 {
-    /** Application variable */
-    std::vector<float> myFloats = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-    const std::size_t Nx = myFloats.size();
+    int mpiRank = 0, mpiSize = 1;
 
-    /** ADIOS class factory of IO class objects, DebugON is recommended */
+#ifdef ADIOS2_HAVE_MPI
+    MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank);
+    MPI_Comm_size(MPI_COMM_WORLD, &mpiSize);
+    adios2::ADIOS adios(MPI_COMM_WORLD, adios2::DebugON);
+#else
     adios2::ADIOS adios(adios2::DebugON);
+#endif
 
-    /*** IO class object: settings and factory of Settings: Variables,
-     * Parameters, Transports, and Execution: Engines */
     adios2::IO &io = adios.DeclareIO("PythonPluginIO");
 
-    /** global array: name, { shape (total dimensions) }, { start (local) },
-     * { count (local) }, all are constant dimensions */
-    adios2::Variable<float> &var = io.DefineVariable<float>(
-        "data", {}, {}, {Nx}, adios2::ConstantDims);
-
-    /** Engine derived class, spawned to start IO operations */
     io.SetEngine("PythonPluginEngine");
     io.SetParameters({{"PluginName", "TestPythonPlugin"},
                       {"PluginModule", "TestPythonEngine"},
                       {"PluginClass", "TestPythonEngine"}});
-    auto writer = io.Open("TestPythonPlugin", adios2::OpenMode::Write);
+
+    std::shared_ptr<adios2::Engine> writer;
+    EXPECT_NO_THROW({
+        writer = io.Open("TestPythonPlugin", adios2::OpenMode::Write);
+    });
 
     ASSERT_NE(writer.get(), nullptr);
 
-    /** Write variable for buffering */
-    writer->Write<float>(var, myFloats.data());
-
-    /** Create bp file, engine becomes unreachable after this*/
     writer->Close();
+}
+
+/**
+ * Test that without the proper plugin module specified, IO fails to
+ * instantiate the engine and throws the correct exception type.
+ */
+TEST(PythonEngineTest, CreatePythonEngineFromCPlusPlusExpectImportError)
+{
+    int mpiRank = 0, mpiSize = 1;
+
+#ifdef ADIOS2_HAVE_MPI
+    MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank);
+    MPI_Comm_size(MPI_COMM_WORLD, &mpiSize);
+    adios2::ADIOS adios(MPI_COMM_WORLD, adios2::DebugON);
+#else
+    adios2::ADIOS adios(adios2::DebugON);
+#endif
+
+    adios2::IO &io = adios.DeclareIO("PythonPluginIO");
+
+    io.SetEngine("PythonPluginEngine");
+
+    // By not specifying "PluginModule" parameter, we should fail during
+    // the "Open" call...
+    io.SetParameters({{"PluginName", "TestPythonPlugin"},
+                      {"PluginClass", "TestPythonEngine"}});
+
+    std::shared_ptr<adios2::Engine> writer;
+
+    ASSERT_THROW({
+        writer = io.Open("TestPythonPlugin", adios2::OpenMode::Write);
+    }, std::runtime_error);
 }
 
 //******************************************************************************
@@ -47,16 +77,16 @@ TEST(PythonEngineTest, CreatePythonEngineFromCPlusPlus)
 
 int main(int argc, char **argv)
 {
-// #ifdef ADIOS2_HAVE_MPI
-//     MPI_Init(nullptr, nullptr);
-// #endif
+#ifdef ADIOS2_HAVE_MPI
+    MPI_Init(nullptr, nullptr);
+#endif
 
     ::testing::InitGoogleTest(&argc, argv);
     int result = RUN_ALL_TESTS();
 
-// #ifdef ADIOS2_HAVE_MPI
-//     MPI_Finalize();
-// #endif
+#ifdef ADIOS2_HAVE_MPI
+    MPI_Finalize();
+#endif
 
     return result;
 }
