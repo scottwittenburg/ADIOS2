@@ -18,11 +18,12 @@ if(ADIOS2_HAVE_MPI)
       ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS})
     python_add_test(NAME PythonBPWrite ${test_parameters} SCRIPT TestBPWriteTypes.py)
     python_add_test(NAME TestOpenPythonEngineFromPython ${test_parameters} SCRIPT TestOpenPythonEngineFromPython.py)
-
-    list(APPEND pyPathNeededList TestOpenPythonEngineFromPython)
+    python_add_test(NAME TestOpenInlinePythonEngineFromPython ${test_parameters} SCRIPT TestOpenInlinePythonEngineFromPython.py)
 
     set(extra_test_args EXEC_WRAPPER ${MPIEXEC_COMMAND})
 endif()
+
+list(APPEND pyPathNeededList TestOpenPythonEngineFromPython)
 
 add_executable(TestPythonEngineFromCpp TestPythonEngineFromCpp.cpp)
 target_link_libraries(TestPythonEngineFromCpp adios2 gtest gtest_main)
