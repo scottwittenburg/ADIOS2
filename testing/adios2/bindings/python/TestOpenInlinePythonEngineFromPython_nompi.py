@@ -1,6 +1,5 @@
 import unittest
 
-from mpi4py import MPI
 import numpy
 import adios2
 
@@ -15,13 +14,13 @@ class InlineDummyEngine():
 
     def Write(self):
         global MODULE_LEVEL_VARIABLE
-        MODULE_LEVEL_VARIABLE += 1
         print('InlineDummyEngine.Write called')
+        MODULE_LEVEL_VARIABLE += 1
 
     def Writef(self):
         global MODULE_LEVEL_VARIABLE
+        print('Inside InlineDummyEngine Writef')
         MODULE_LEVEL_VARIABLE += 1
-        print('Inside InlineDummyEngine.Writef')
 
     def Advance(self, timeoutSeconds):
         print('Inside InlineDummyEngine Advance')
@@ -35,28 +34,25 @@ class InlineDummyEngine():
 class TestOpenInlinePythonEngineFromPython(unittest.TestCase):
     def testCreateEngine(self):
         global MODULE_LEVEL_VARIABLE
+
+        rank = 0
+        size = 1
+
+        myArray = numpy.array([0., 1., 2., 3., 4., 5., 6., 7., 8., 9.])
+        Nx = myArray.size
+
         self.assertEqual(MODULE_LEVEL_VARIABLE, 0)
         MODULE_LEVEL_VARIABLE += 1
         self.assertEqual(MODULE_LEVEL_VARIABLE, 1)
 
-        # MPI
-        comm = MPI.COMM_WORLD
-        rank = comm.Get_rank()
-        size = comm.Get_size()
-
-        # User data
-        myArray = numpy.array([0., 1., 2., 3., 4., 5., 6., 7., 8., 9.])
-        Nx = myArray.size
-
         # ADIOS MPI Communicator, debug mode
-        adios = adios2.ADIOS(comm, adios2.DebugON)
+        adios = adios2.ADIOS(adios2.DebugON)
 
         # ADIOS IO
         bpIO = adios.DeclareIO("BPFile_N2N")
 
         # ADIOS Variable name, shape, start, offset, constant dims
-        ioArray = bpIO.DefineVariable(
-            "bpArray", [size * Nx], [rank * Nx], [Nx], adios2.ConstantDims)
+        ioArray = bpIO.DefineVariable("bpArray", [size * Nx], [rank * Nx], [Nx], adios2.ConstantDims)
 
         # Engine derived class, spawned to start IO operations
         bpIO.SetEngine("PythonPluginEngine")
@@ -64,6 +60,7 @@ class TestOpenInlinePythonEngineFromPython(unittest.TestCase):
 
         # ADIOS Engine
         bpFileWriter = bpIO.Open("npArray.bp", adios2.OpenModeWrite)
+
         bpFileWriter.Write(ioArray, myArray)
 
         self.assertEqual(MODULE_LEVEL_VARIABLE, 2)
@@ -71,9 +68,7 @@ class TestOpenInlinePythonEngineFromPython(unittest.TestCase):
         bpFileWriter.Close()
 
     def testCreateEngineWithWrongName(self):
-        # MPI
-        comm = MPI.COMM_WORLD
-        adios = adios2.ADIOS(comm, adios2.DebugON)
+        adios = adios2.ADIOS(adios2.DebugON)
         bpIO = adios.DeclareIO("BPFile_N2N")
 
         bpIO.SetEngine("PythonPluginEngine")
