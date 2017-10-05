@@ -10,12 +10,13 @@ set(pyPathNeededList "")
 if(NOT ADIOS2_HAVE_MPI)
     python_add_test(NAME PythonBPWrite SCRIPT TestBPWriteTypes_nompi.py)
     python_add_test(NAME TestOpenPythonEngineFromPython SCRIPT TestOpenPythonEngineFromPython_nompi.py)
+    python_add_test(NAME TestOpenInlinePythonEngineFromPython ${test_parameters} SCRIPT TestOpenInlinePythonEngineFromPython_nompi.py)
 endif()
 
 if(ADIOS2_HAVE_MPI)
     set(test_parameters
       EXEC_WRAPPER
-      ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS})
+      ${MPIEXEC} -oversubscribe ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS})
     python_add_test(NAME PythonBPWrite ${test_parameters} SCRIPT TestBPWriteTypes.py)
     python_add_test(NAME TestOpenPythonEngineFromPython ${test_parameters} SCRIPT TestOpenPythonEngineFromPython.py)
     python_add_test(NAME TestOpenInlinePythonEngineFromPython ${test_parameters} SCRIPT TestOpenInlinePythonEngineFromPython.py)
