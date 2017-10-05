@@ -1,6 +1,8 @@
-import unittest
+from Adios2PythonTestBase import Adios2PythonTestBase
 
-from mpi4py import MPI
+if Adios2PythonTestBase.isUsingMpi():
+    from mpi4py import MPI
+
 import numpy
 import adios2
 
@@ -32,24 +34,28 @@ class InlineDummyEngine():
 ###
 ### Create a testcase class with some tests
 ###
-class TestOpenInlinePythonEngineFromPython(unittest.TestCase):
+class TestOpenInlinePythonEngineFromPython(Adios2PythonTestBase):
     def testCreateEngine(self):
         global MODULE_LEVEL_VARIABLE
         self.assertEqual(MODULE_LEVEL_VARIABLE, 0)
         MODULE_LEVEL_VARIABLE += 1
         self.assertEqual(MODULE_LEVEL_VARIABLE, 1)
 
-        # MPI
-        comm = MPI.COMM_WORLD
-        rank = comm.Get_rank()
-        size = comm.Get_size()
+        rank = 0
+        size = 1
+
+        if self.isUsingMpi():
+            # MPI
+            comm = MPI.COMM_WORLD
+            rank = comm.Get_rank()
+            size = comm.Get_size()
+            adios = adios2.ADIOS(comm, adios2.DebugON)
+        else:
+            adios = adios2.ADIOS(adios2.DebugON)
 
         # User data
         myArray = numpy.array([0., 1., 2., 3., 4., 5., 6., 7., 8., 9.])
         Nx = myArray.size
-
-        # ADIOS MPI Communicator, debug mode
-        adios = adios2.ADIOS(comm, adios2.DebugON)
 
         # ADIOS IO
         bpIO = adios.DeclareIO("BPFile_N2N")
@@ -71,9 +77,13 @@ class TestOpenInlinePythonEngineFromPython(unittest.TestCase):
         bpFileWriter.Close()
 
     def testCreateEngineWithWrongName(self):
-        # MPI
-        comm = MPI.COMM_WORLD
-        adios = adios2.ADIOS(comm, adios2.DebugON)
+        if self.isUsingMpi():
+            # MPI
+            comm = MPI.COMM_WORLD
+            adios = adios2.ADIOS(comm, adios2.DebugON)
+        else:
+            adios = adios2.ADIOS(adios2.DebugON)
+
         bpIO = adios.DeclareIO("BPFile_N2N")
 
         bpIO.SetEngine("PythonPluginEngine")
@@ -87,4 +97,4 @@ class TestOpenInlinePythonEngineFromPython(unittest.TestCase):
 ### Trigger the tests
 ###
 if __name__ == '__main__':
-    unittest.main()
+    Adios2PythonTestBase.main()
