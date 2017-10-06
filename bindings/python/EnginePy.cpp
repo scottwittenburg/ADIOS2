@@ -17,8 +17,14 @@ namespace adios2
 
 EnginePy::EnginePy(IO &io, const std::string &name, const OpenMode openMode,
                    MPI_Comm mpiComm)
-: m_IO(io), m_Engine(m_IO.Open(name, openMode, mpiComm)),
-  m_DebugMode(m_IO.m_DebugMode)
+: m_IO(io), m_DebugMode(m_IO.m_DebugMode),
+  m_Engine(m_IO.Open(name, openMode, mpiComm))
+{
+}
+
+EnginePy::EnginePy(IO &io, const std::string &name, const OpenMode openMode)
+: m_IO(io), m_DebugMode(m_IO.m_DebugMode),
+  m_Engine(m_IO.Open(name, openMode))
 {
 }
 

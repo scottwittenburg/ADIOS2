@@ -99,8 +99,15 @@ PYBIND11_PLUGIN(adios2)
     m.def("ADIOS", &ADIOSPyInitConfig,
           "Function that creates an ADIOS class object using a config file");
 
-    pybind11::class_<adios2::ADIOSPy>(m, "ADIOSPy")
-        .def("DeclareIO", &adios2::ADIOSPy::DeclareIO);
+    pybind11::class_<adios2::ADIOSPy> adiosInstance(m, "ADIOSPy");
+    adiosInstance.def("DeclareIO", &adios2::ADIOSPy::DeclareIO);
+    pybind11::enum_<adios2::OpenMode>(adiosInstance, "OpenMode")
+        .value("Undefined", adios2::OpenMode::Undefined)
+        .value("Write", adios2::OpenMode::Write)
+        .value("Read", adios2::OpenMode::Read)
+        .value("Append", adios2::OpenMode::Append)
+        .value("ReadWrite", adios2::OpenMode::ReadWrite)
+        .export_values();
 
     pybind11::class_<adios2::IOPy>(m, "IOPy")
         .def("SetEngine", &adios2::IOPy::SetEngine)

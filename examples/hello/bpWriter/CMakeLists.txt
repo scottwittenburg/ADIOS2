@@ -27,3 +27,12 @@ endif()
 
 target_link_libraries(hello_bpWriter adios2)
 target_link_libraries(hello_bpWriter_c adios2)
+
+if(ADIOS2_HAVE_Python)
+  add_executable(helloBpWriter_nompi_pyext helloBPWriter_nompi_pyext.cpp)
+  target_include_directories(helloBpWriter_nompi_pyext PRIVATE ${PYBIND11_INCLUDE_DIR} ${PYTHON_INCLUDE_DIRS})
+  target_link_libraries(helloBpWriter_nompi_pyext PUBLIC adios2 PRIVATE pybind11::embed)
+
+  add_executable(examplePythonPlugin examplePythonPlugin.cpp)
+  target_link_libraries(examplePythonPlugin PUBLIC adios2)
+endif()

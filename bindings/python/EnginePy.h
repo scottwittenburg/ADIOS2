@@ -31,6 +31,8 @@ public:
     EnginePy(IO &io, const std::string &name, const OpenMode openMode,
              MPI_Comm mpiComm);
 
+    EnginePy(IO &io, const std::string &name, const OpenMode openMode);
+
     ~EnginePy() = default;
 
     void Write(VariablePy &variable, const pyArray &array);
