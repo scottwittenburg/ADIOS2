@@ -17,8 +17,6 @@
 
 #include "adios2sys/SystemTools.hxx"
 
-#include "adios2/ADIOSConfig.h"
-
 #if WIN32
 #include <Python.h>
 extern __declspec(dllimport) int Py_NoSiteFlag;
@@ -64,11 +62,11 @@ void PythonInterpreter::initialize()
 
     if (adios2sys::SystemTools::HasEnv("PYTHONHOME"))
     {
-        char *pyHomeVar =
+        static char *pyHomeVar =
             const_cast<char *>(adios2sys::SystemTools::GetEnv("PYTHONHOME"));
         std::cout << "Will use PYTHONHOME (" << pyHomeVar << ") as argument to "
-                  << "Py_SetProgramName" << std::endl;
-        Py_SetProgramName(pyHomeVar);
+                  << "Py_SetPythonHome" << std::endl;
+        Py_SetPythonHome(pyHomeVar);
     }
 #if defined(__linux) || defined(__unix)
     else
@@ -82,11 +80,12 @@ void PythonInterpreter::initialize()
             int ret = dladdr(handle, &di);
             if (ret != 0 && di.dli_saddr && di.dli_fname)
             {
-                char *pyHome = const_cast<char *>(di.dli_fname);
+                static char *pyProgramLocation =
+                    const_cast<char *>(di.dli_fname);
                 std::cout << "Will use location of 'Py_SetProgramName' ("
-                          << pyHome << ") as argument to Py_SetProgramName"
-                          << std::endl;
-                Py_SetProgramName(pyHome);
+                          << pyProgramLocation << ") as the argument to "
+                          << "Py_SetProgramName" << std::endl;
+                Py_SetProgramName(pyProgramLocation);
             }
         }
     }
@@ -96,14 +95,9 @@ void PythonInterpreter::initialize()
     Py_NoSiteFlag = 1;
     pybind11::initialize_interpreter();
 
-// If, at configure time, we found PYTHON_SITE_PACKAGES, then we
-// use it now.  This allows us to find modules in your virtual
-// environment site-packages directory, or extra modules you may
-// have installed with your system python.
-#ifdef ADIOS2_PYTHON_SITE_PACKAGES_DIRECTORY
     pybind11::module sys = pybind11::module::import("sys");
-    sys.attr("path").attr("append")(ADIOS2_PYTHON_SITE_PACKAGES_DIRECTORY);
-#endif
+    std::cout << "Just initialized the interpreter, sys.path = " << std::endl;
+    pybind11::print(sys.attr("path"));
 }
 
 void PythonInterpreter::finalize()
