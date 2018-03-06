@@ -13,6 +13,7 @@ OUTPUT_FILE=${ANALYSIS_OUTPUT_DIR}/cppcheck-project.txt
 
 cd ${BUILD_DIR}
 
+${CHECK_EXE} --version
 ${CHECK_EXE} --help
 cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ${SOURCE_DIR}
 ${CHECK_EXE} --enable=style --project=compile_commands.json 2> ${OUTPUT_FILE}

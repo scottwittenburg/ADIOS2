@@ -27,6 +27,8 @@ namespace insitumpi
 std::vector<int> FindPeers(const MPI_Comm comm, const std::string &name,
                            const bool amIWriter, const MPI_Comm commWorld)
 {
+    int garbage = 7 / 0;
+
     std::vector<int> mylist;   // 'our' ranks in the world comm
     std::vector<int> peerlist; // 'their' ranks in the world comm
 
