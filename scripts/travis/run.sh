@@ -13,8 +13,14 @@ case ${BUILD_MATRIX_ENTRY} in
     fi
     ;;
   analyze)
-    echo "Running static analysis"
+    echo "Running static analysis (clang-analyzer)"
     if ! ${SOURCE_DIR}/scripts/travis/run-sa.sh; then
+      exit 1;
+    fi
+    ;;
+  check)
+    echo "Running static analysis (cppcheck)"
+    if ! ${SOURCE_DIR}/scripts/travis/run-check.sh; then
       exit 1;
     fi
     ;;
