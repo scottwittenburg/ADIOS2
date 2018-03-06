@@ -12,6 +12,12 @@ case ${BUILD_MATRIX_ENTRY} in
       exit 1;
     fi
     ;;
+  analyze)
+    echo "Running static analysis"
+    if ! ${SOURCE_DIR}/scripts/travis/run-sa.sh; then
+      exit 1;
+    fi
+    ;;
   *)
     echo "Error: BUILD_MATRIX_ENTRY is undefined or set to an unknown value"
     exit 1;
