@@ -8,8 +8,8 @@ addons:
       - clang-format-3.8
       - clang-tidy-3.8
       - cppcheck
-      - openmpi-bin
-      - libopenmpi-dev
+      - mpich
+      - libmpich-dev
 before_install:
   - wget http://www.cmake.org/files/v3.7/cmake-3.7.2-Linux-x86_64.tar.gz
 install:
