@@ -20,7 +20,7 @@ case ${BUILD_MATRIX_ENTRY} in
     ;;
   check)
     echo "Running static analysis (cppcheck)"
-    if ! ${SOURCE_DIR}/scripts/travis/run-check.sh; then
+    if ! ${SOURCE_DIR}/scripts/travis/run-cppcheck.sh; then
       exit 1;
     fi
     ;;
