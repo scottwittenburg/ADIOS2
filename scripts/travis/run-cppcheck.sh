@@ -24,4 +24,10 @@ if [ -s ${OUTPUT_FILE} ]; then
     exit 1
 fi
 
+# steps=( update configure build )
+# for step in "${steps[@]}"; do
+#     echo "Running $step step"
+#     ctest -VV -S ${CTEST_SCRIPT} -Ddashboard_full=OFF -Ddashboard_do_${step}=TRUE -DCTEST_BUILD_NAME=${CUSTOM_BUILD_NAME}
+# done
+
 exit 0

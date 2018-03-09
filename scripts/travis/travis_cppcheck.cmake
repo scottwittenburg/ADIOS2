@@ -6,7 +6,7 @@ set(CTEST_BUILD_FLAGS "-k -j8")
 set(CTEST_TEST_ARGS PARALLEL_LEVEL 1)
 
 set(dashboard_model Experimental)
-set(dashboard_binary_name "build_clang-analyzer")
+set(dashboard_binary_name "build_cppcheck")
 set(dashboard_track "Continuous Integration")
 
 set(CTEST_GIT_COMMAND "/usr/bin/git")
@@ -16,5 +16,9 @@ set(CTEST_DASHBOARD_ROOT "$ENV{HOME}")
 
 set(ENV{CC}  "$ENV{CCC_ANALYZER}")
 set(ENV{CXX} "$ENV{CXX_ANALYZER}")
+
+# set(dashboard_cache "
+
+# ")
 
 include(${CMAKE_CURRENT_LIST_DIR}/../dashboard/adios_common.cmake)
