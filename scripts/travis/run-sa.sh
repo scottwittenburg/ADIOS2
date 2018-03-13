@@ -16,7 +16,7 @@ export CXX_ANALYZER=$(find /usr/share/clang | grep c++-analyzer$)
 echo "CCC_ANALYZER=${CCC_ANALYZER}"
 echo "CXX_ANALYZER=${CXX_ANALYZER}"
 
-CUSTOM_BUILD_NAME="${TRAVIS_PULL_REQUEST_BRANCH}_${TRAVIS_BUILD_NUMBER_clang-analyzer}"
+CUSTOM_BUILD_NAME="${TRAVIS_PULL_REQUEST_BRANCH}_${TRAVIS_BUILD_NUMBER}_clang-analyzer"
 CTEST_SCRIPT="${SOURCE_DIR}/scripts/travis/travis_clang-analyzer.cmake"
 
 extra_checkers=(
