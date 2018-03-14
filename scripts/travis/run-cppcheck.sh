@@ -16,6 +16,7 @@ OUTPUT_FILE=${ANALYSIS_OUTPUT_DIR}/cppcheck-project.txt
 
 export WRAPPED_CC="${SOURCE_DIR}/scripts/travis/cppcheck_wrap_gcc.sh"
 export WRAPPED_CXX="${SOURCE_DIR}/scripts/travis/cppcheck_wrap_gplusplus.sh"
+export CPPCHECK_EXE=${CPPCHECK_EXE}
 
 cd ${BUILD_DIR}
 
