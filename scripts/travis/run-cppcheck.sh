@@ -1,48 +1,56 @@
 #!/usr/bin/env bash
 
-set -ex
-
 if [ -z "${SOURCE_DIR}" ]
 then
   echo "Error: SOURCE_DIR is empty or undefined"
   exit 1
 fi
 
+# First download CMake binaries (at least 3.10)
+cd ${HOME}
+wget https://cmake.org/files/v3.10/cmake-3.10.2-Linux-x86_64.tar.gz
+tar -zxf cmake-3.10.2-Linux-x86_64.tar.gz
+CMAKE_EXE="${HOME}/cmake-3.10.2-Linux-x86_64/bin/cmake"
+CTEST_EXE="${HOME}/cmake-3.10.2-Linux-x86_64/bin/ctest"
+
+# Now get cppcheck source pkg and build it
+cd ${HOME}
+wget https://github.com/danmar/cppcheck/archive/1.82.tar.gz
+mkdir -p /opt/cppcheck/build /opt/cppcheck/install
+cd /opt/cppcheck
+tar -xzf ${HOME}/1.82.tar.gz
+cd build
+
+CC=$(which clang-3.8)
+CXX=$(which clang++-3.8)
+
+echo "Found clang C compiler: ${CC}"
+echo "Found clang C++ compiler: ${CXX}"
+
+${CMAKE_EXE} \
+  -DCMAKE_INSTALL_PREFIX:PATH=/opt/cppcheck/install \
+  -DCMAKE_C_COMPILER:FILEPATH=${CC} \
+  -DCMAKE_CXX_COMPILER:FILEPATH=${CXX} \
+  ../cppcheck-1.82
+
+make -j8
+make install
+
 CPPCHECK_EXE=/opt/cppcheck/install/bin/cppcheck
+${CPPCHECK_EXE} --version
+${CPPCHECK_EXE} --help
 
-ANALYSIS_OUTPUT_DIR=$HOME/cppcheck-output
-mkdir ${ANALYSIS_OUTPUT_DIR}
-OUTPUT_FILE=${ANALYSIS_OUTPUT_DIR}/cppcheck-project.txt
-
-export WRAPPED_CC="${SOURCE_DIR}/scripts/travis/cppcheck_wrap_gcc.sh"
-export WRAPPED_CXX="${SOURCE_DIR}/scripts/travis/cppcheck_wrap_gplusplus.sh"
-export CPPCHECK_EXE=${CPPCHECK_EXE}
-
+# Now run dashboard script
 cd ${BUILD_DIR}
+
+export CMAKE_CPPCHECK_COMMAND="${CPPCHECK_EXE};--enable=style;--template=\"CPPCHECK - POTENTIAL ERROR - {file}:{line}: ({severity}) => {id} {message}\""
+export CPPCHECK_EXE=${CPPCHECK_EXE}
 
 CUSTOM_BUILD_NAME="${TRAVIS_PULL_REQUEST_BRANCH}_${TRAVIS_BUILD_NUMBER}_cppcheck"
 CTEST_SCRIPT="${SOURCE_DIR}/scripts/travis/travis_cppcheck.cmake"
 
-${CPPCHECK_EXE} --version
-${CPPCHECK_EXE} --help
-# cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ${SOURCE_DIR}
-# ${CPPCHECK_EXE} --enable=style --project=compile_commands.json 2> ${OUTPUT_FILE}
-
-# if [ -s ${OUTPUT_FILE} ]; then
-#     cat ${OUTPUT_FILE}
-#     exit 1
-# fi
-
 steps=( update configure build )
 for step in "${steps[@]}"; do
     echo "Running $step step"
-    CPPCHECK=""
-    if [ "$step" == "build" ]
-    then
-        CPPCHECK="TRUE"
-    fi
-    export DOCPPCHECK=${CPPCHECK}
-    ctest -VV -S ${CTEST_SCRIPT} -Ddashboard_full=OFF -Ddashboard_do_${step}=TRUE -DCTEST_BUILD_NAME=${CUSTOM_BUILD_NAME}
+    ${CTEST_EXE} -VV -S ${CTEST_SCRIPT} -Ddashboard_full=OFF -Ddashboard_do_${step}=TRUE -DCTEST_BUILD_NAME=${CUSTOM_BUILD_NAME}
 done
-
-# exit 0

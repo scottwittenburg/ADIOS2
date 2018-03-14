@@ -14,11 +14,13 @@ set(CTEST_UPDATE_VERSION_ONLY TRUE)
 set(CTEST_SOURCE_DIRECTORY "$ENV{SOURCE_DIR}")
 set(CTEST_DASHBOARD_ROOT "$ENV{HOME}")
 
-set(ENV{CC}  "$ENV{WRAPPED_CC}")
-set(ENV{CXX} "$ENV{WRAPPED_CXX}")
+set(ENV{CC}  gcc)
+set(ENV{CXX} g++)
 
-# set(dashboard_cache "
+message("Going to use CMAKE_CXX_CPPCHECK:STRING=$ENV{CMAKE_CPPCHECK_COMMAND}")
 
-# ")
+set(dashboard_cache "
+CMAKE_CXX_CPPCHECK:STRING=$ENV{CMAKE_CPPCHECK_COMMAND}
+")
 
 include(${CMAKE_CURRENT_LIST_DIR}/../dashboard/adios_common.cmake)
