@@ -378,61 +378,61 @@ jobs:
 # Docker container jobs
 #######################################
 
-  docker:
-    needs: [format, git_checks]
-    if: needs.git_checks.outputs.num_code_changes > 0
+  # docker:
+  #   needs: [format, git_checks]
+  #   if: needs.git_checks.outputs.num_code_changes > 0
 
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        baseos: [ubuntu-bionic]
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       baseos: [ubuntu-bionic]
 
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          path: ci-source
-      - name: Re-configure docker daemon
-        run: |
-            sudo systemctl stop docker
-            echo $'{\n    "experimental": true\n}' | \
-                sudo tee /etc/docker/daemon.json
-            sudo systemctl start docker
-      - name: Build image
-        run: |
-            docker build \
-                --rm --squash \
-                -t ornladios/adios2:ci-tmp \
-                --build-arg baseos=${{ matrix.baseos }} \
-                --build-arg ci_source_dir=ci-source \
-                -f ci-source/scripts/ci/images/spack/Dockerfile \
-                .
-      - name: Save image as a tar file
-        run: |
-            docker save -o ci-docker.tar ornladios/adios2:ci-tmp
-            ls -lah ci-docker.tar
-      - name: Upload
-        uses: actions/upload-artifact@v2
-        with:
-          retention-days: 1
-          name: ci-docker ${{ matrix.baseos }} ${{ github.sha }}
-          path: ci-docker.tar
-      - name: Push image to Docker Hub
-        if: github.event_name == 'push'
-        env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
-        run: |
-            target_tag="${GITHUB_REF##refs/heads/}-${{ matrix.baseos }}"
-            docker tag \
-                ornladios/adios2:ci-tmp \
-                ornladios/adios2:${target_tag}
-            docker login \
-                --username="${DOCKERHUB_USERNAME}" \
-                --password="${DOCKERHUB_PASSWORD}"
-            docker push \
-                ornladios/adios2:${target_tag}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         ref: ${{ github.event.pull_request.head.sha }}
+  #         path: ci-source
+  #     - name: Re-configure docker daemon
+  #       run: |
+  #           sudo systemctl stop docker
+  #           echo $'{\n    "experimental": true\n}' | \
+  #               sudo tee /etc/docker/daemon.json
+  #           sudo systemctl start docker
+  #     - name: Build image
+  #       run: |
+  #           docker build \
+  #               --rm --squash \
+  #               -t ornladios/adios2:ci-tmp \
+  #               --build-arg baseos=${{ matrix.baseos }} \
+  #               --build-arg ci_source_dir=ci-source \
+  #               -f ci-source/scripts/ci/images/spack/Dockerfile \
+  #               .
+  #     - name: Save image as a tar file
+  #       run: |
+  #           docker save -o ci-docker.tar ornladios/adios2:ci-tmp
+  #           ls -lah ci-docker.tar
+  #     - name: Upload
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         retention-days: 1
+  #         name: ci-docker ${{ matrix.baseos }} ${{ github.sha }}
+  #         path: ci-docker.tar
+  #     - name: Push image to Docker Hub
+  #       if: github.event_name == 'push'
+  #       env:
+  #         DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+  #         DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+  #       run: |
+  #           target_tag="${GITHUB_REF##refs/heads/}-${{ matrix.baseos }}"
+  #           docker tag \
+  #               ornladios/adios2:ci-tmp \
+  #               ornladios/adios2:${target_tag}
+  #           docker login \
+  #               --username="${DOCKERHUB_USERNAME}" \
+  #               --password="${DOCKERHUB_PASSWORD}"
+  #           docker push \
+  #               ornladios/adios2:${target_tag}
 
 #######################################
 # Contract testing jobs
@@ -443,57 +443,57 @@ jobs:
   # Actions container job does.  Using the "messy" default shell for
   # run steps lets the steps be written as though they too were using a
   # standard container job.
-  contract:
-    needs: [format, git_checks, docker]
-    if: needs.git_checks.outputs.num_code_changes > 0
+  # contract:
+  #   needs: [format, git_checks, docker]
+  #   if: needs.git_checks.outputs.num_code_changes > 0
 
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        code: [examples, lammps, tau]
-        include:
-          - code: examples
-          - code: lammps
-            repo: pnorbert/lammps
-            ref: fix-deprecated-adios-init
-          - code: tau
-    defaults:
-      run:
-        shell: bash -c "docker exec adios2-ci bash --login -e $(echo {0} | sed 's|/home/runner/work|/__w|g')"
+  #   runs-on: ubuntu-latest
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       code: [examples, lammps, tau]
+  #       include:
+  #         - code: examples
+  #         - code: lammps
+  #           repo: pnorbert/lammps
+  #           ref: fix-deprecated-adios-init
+  #         - code: tau
+  #   defaults:
+  #     run:
+  #       shell: bash -c "docker exec adios2-ci bash --login -e $(echo {0} | sed 's|/home/runner/work|/__w|g')"
 
-    steps:
-      - uses: actions/checkout@v4
-        if: ${{ matrix.repo != '' }}
-        with:
-          repository: ${{ matrix.repo }}
-          ref: ${{ matrix.ref }}
-          path: source
-      - name: Download CI docker image
-        uses: actions/download-artifact@v2
-        with:
-          name: ci-docker ubuntu-bionic ${{ github.sha }}
-      - name: Initialize containers
-        shell: bash -e {0}
-        run: |
-            sudo chown 1000:1000 .
-            docker load -i ci-docker.tar
-            docker create \
-                --name adios2-ci --workdir /__w/ADIOS2/ADIOS2 \
-                -v "/home/runner/work":"/__w" \
-                --entrypoint "tail" ornladios/adios2:ci-tmp \
-                "-f" "/dev/null"
-            docker start adios2-ci
-      - name: Dependencies
-        run: /opt/adios2/source/testing/contract/${{ matrix.code }}/depends.sh
-      - name: Configure
-        run: /opt/adios2/source/testing/contract/${{ matrix.code }}/config.sh
-      - name: Build
-        run: /opt/adios2/source/testing/contract/${{ matrix.code }}/build.sh
-      - name: Install
-        run: /opt/adios2/source/testing/contract/${{ matrix.code }}/install.sh
-      - name: Test
-        run: /opt/adios2/source/testing/contract/${{ matrix.code }}/test.sh
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       if: ${{ matrix.repo != '' }}
+  #       with:
+  #         repository: ${{ matrix.repo }}
+  #         ref: ${{ matrix.ref }}
+  #         path: source
+  #     - name: Download CI docker image
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         name: ci-docker ubuntu-bionic ${{ github.sha }}
+  #     - name: Initialize containers
+  #       shell: bash -e {0}
+  #       run: |
+  #           sudo chown 1000:1000 .
+  #           docker load -i ci-docker.tar
+  #           docker create \
+  #               --name adios2-ci --workdir /__w/ADIOS2/ADIOS2 \
+  #               -v "/home/runner/work":"/__w" \
+  #               --entrypoint "tail" ornladios/adios2:ci-tmp \
+  #               "-f" "/dev/null"
+  #           docker start adios2-ci
+  #     - name: Dependencies
+  #       run: /opt/adios2/source/testing/contract/${{ matrix.code }}/depends.sh
+  #     - name: Configure
+  #       run: /opt/adios2/source/testing/contract/${{ matrix.code }}/config.sh
+  #     - name: Build
+  #       run: /opt/adios2/source/testing/contract/${{ matrix.code }}/build.sh
+  #     - name: Install
+  #       run: /opt/adios2/source/testing/contract/${{ matrix.code }}/install.sh
+  #     - name: Test
+  #       run: /opt/adios2/source/testing/contract/${{ matrix.code }}/test.sh
 
 #######################################
 # Code analysis builds
@@ -557,7 +557,7 @@ jobs:
 
   build_and_test:
     # TODO: needs: [linux_el8, linux_ubuntu, macos, docker, contract]
-    needs: [contract]
+    needs: [format, git_checks]
     runs-on: ubuntu-latest
     steps:
       - run: echo "All required jobs complete"

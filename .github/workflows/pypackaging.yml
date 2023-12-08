@@ -74,9 +74,8 @@ jobs:
       id-token: write
     runs-on: ubuntu-latest
     # Upload to Test PyPI for every commit on main branch
-    # if: github.event_name == 'push' && github.event.ref == 'refs/heads/master'
-    # TODO: debug only, test publishing from this PR branch
-    if: github.event_name == 'push' && github.event.ref == 'refs/heads/add-pip-packaging'
+    # TODO: if: github.event_name == 'push' && github.event.ref == 'refs/heads/master'
+    if: github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.event.pull_request.head.ref == 'add-pip-packaging'
     steps:
       - uses: actions/download-artifact@v3
         with:
