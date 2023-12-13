@@ -19,10 +19,10 @@ setup_version(2.9.0)
 project(ADIOS2 VERSION ${ADIOS2_VERSION})
 
 # Advanced option to tell CMake the build is on behalf of pip
-set(ADIOS2_PIP_INSTALL OFF CACHE BOOL "Turn on for pip install")
-mark_as_advanced(ADIOS2_PIP_INSTALL)
+set(ADIOS2_USE_PIP OFF CACHE BOOL "Turn on for pip install")
+mark_as_advanced(ADIOS2_USE_PIP)
 
-if (ADIOS2_PIP_INSTALL)
+if (ADIOS2_USE_PIP)
   # Required for shared library placement.
   if (WIN32)
     # Defaults are fine; handled by `delvewheel`.

@@ -37,13 +37,13 @@ wheel.packages = ["adios2"]
 metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
 
 [tool.setuptools_scm]  # Section required
-write_to = "_version.py"
 version_scheme = "post-release"
 
 [tool.cibuildwheel.linux]
 environment-pass = ["SETUPTOOLS_SCM_PRETEND_VERSION"]
 
 [tool.scikit-build.cmake.define]
+ADIOS2_USE_PIP = "ON"
 ADIOS2_USE_Python = "ON"
 ADIOS2_USE_Fortran = "OFF"
 ADIOS2_USE_MPI = "OFF"
@@ -55,6 +55,5 @@ ADIOS2_USE_DataMan = "OFF"
 ADIOS2_USE_SZ = "OFF"
 ADIOS2_USE_ZeroMQ = "OFF"
 ADIOS2_USE_ZFP = "OFF"
-ADIOS2_PIP_INSTALL = "ON"
 BUILD_TESTING = "OFF"
 ADIOS2_INSTALL_GENERATE_CONFIG = "OFF"

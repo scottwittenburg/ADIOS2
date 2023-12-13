@@ -2,6 +2,9 @@ name: Python Packaging
 
 on:
   workflow_dispatch:
+    inputs:
+      overrideVersion:
+        description: Manually force a version
   pull_request:
   push:
     branches:
@@ -10,18 +13,20 @@ on:
     types:
       - published
 
+env:
+  SETUPTOOLS_SCM_PRETEND_VERSION: ${{ github.event.inputs.overrideVersion }}
+
 jobs:
   make_sdist:
     name: Make SDist
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Build SDist
         run: pipx run build --sdist
-        env:
-          # TODO: debug only, prevents upload failure due to "local" version
-          SETUPTOOLS_SCM_PRETEND_VERSION: "2.9.2.post431"
 
       - uses: actions/upload-artifact@v3
         with:
@@ -38,13 +43,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: pypa/cibuildwheel@v2.16
         env:
           # TODO: CIBW_BUILD: cp*-manylinux_x86_64
           CIBW_BUILD: cp39-manylinux_x86_64
-          # TODO: debug only, prevents upload failure due to "local" version
-          SETUPTOOLS_SCM_PRETEND_VERSION: "2.9.2.post431"
 
       - name: Upload wheels
         uses: actions/upload-artifact@v3
@@ -74,8 +79,7 @@ jobs:
       id-token: write
     runs-on: ubuntu-latest
     # Upload to Test PyPI for every commit on main branch
-    # TODO: if: github.event_name == 'push' && github.event.ref == 'refs/heads/master'
-    if: github.event_name == 'pull_request' && github.event.action == 'synchronize' && github.event.pull_request.head.ref == 'add-pip-packaging'
+    if: github.event_name == 'push' && github.event.ref == 'refs/heads/master'
     steps:
       - uses: actions/download-artifact@v3
         with:
@@ -86,5 +90,3 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
-          verbose: true
-

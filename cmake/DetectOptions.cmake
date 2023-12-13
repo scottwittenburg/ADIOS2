@@ -399,7 +399,7 @@ if(NOT SHARED_LIBS_SUPPORTED)
   endif()
 endif()
 
-if(ADIOS2_PIP_INSTALL)
+if(ADIOS2_USE_PIP)
   find_package(Python 3 REQUIRED COMPONENTS Interpreter Development.Module NumPy)
 elseif(ADIOS2_USE_Python STREQUAL AUTO)
   find_package(Python 3 COMPONENTS Interpreter Development NumPy)
