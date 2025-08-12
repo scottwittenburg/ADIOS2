@@ -267,6 +267,7 @@ private:
      * data-size based aggregation
      */
     std::vector<uint64_t> m_SubstreamDataPos;
+    bool m_DataPosShared;
 
     bool m_AggregatorInitializedThisStep;
 

@@ -47,6 +47,7 @@ BP5Writer::BP5Writer(IO &io, const std::string &name, const Mode mode, helper::C
 
     Init();
     m_IsOpen = true;
+    m_DataPosShared = false;
 }
 
 std::string BP5Writer::GetCacheKey(aggregator::MPIAggregator *aggregator)
@@ -416,11 +417,12 @@ void BP5Writer::WriteData_EveryoneWrites(format::BufferV *Data, bool SerializedW
         }
     }
     else if (m_Parameters.AggregationType == (int)AggregationType::DataSizeBased &&
-             m_WriterStep > 0)
+             m_DataPosShared == true)
     {
         // We are one of the aggregator rank 0.  If we are doing data-size based aggregation
         // and this is the second timestep or later, we should update our notion of m_DataPos
         m_DataPos = m_SubstreamDataPos[a->m_SubStreamIndex];
+        m_DataPosShared = false;
     }
 
     // align to PAGE_SIZE
@@ -1046,6 +1048,7 @@ void BP5Writer::EndStep()
         m_Profiler.AddTimerWatch("ShareFilePos_BC");
         m_Profiler.Start("ShareFilePos_BC");
         m_Aggregator->m_Comm.BroadcastVector(m_SubstreamDataPos, 0);
+        m_DataPosShared = true;
         m_Profiler.Stop("ShareFilePos_BC");
 
         if (m_Parameters.verbose > 2)
@@ -1825,7 +1828,7 @@ void BP5Writer::InitBPBuffer()
 {
     AggTransportData &aggData = m_AggregatorSpecifics.at(GetCacheKey(m_Aggregator));
 
-    if (m_OpenMode == Mode::Append)
+    if (m_OpenMode == Mode::Append && !m_WriterStep)
     {
         format::BufferSTL preMetadataIndex;
         size_t preMetadataIndexFileSize;
