@@ -16,7 +16,7 @@
 
 #include <gtest/gtest.h>
 
-std::string engineName; // comes from command line
+std::string engineName;              // comes from command line
 std::string aggType = "TwoLevelShm"; // overridden on command line
 
 // Number of elements per process

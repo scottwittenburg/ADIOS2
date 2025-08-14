@@ -1941,11 +1941,16 @@ void BP5Writer::InitBPBuffer()
 
     if (m_Parameters.verbose > 2)
     {
-        std::cout << "Rank " << m_Comm.Rank() << " deciding whether new writer map is needed" << std::endl;
+        std::cout << "Rank " << m_Comm.Rank() << " deciding whether new writer map is needed"
+                  << std::endl;
         std::cout << "  m_WriterStep: " << m_WriterStep << std::endl;
-        std::cout << "  m_AppendWriterCount: " << m_AppendWriterCount << ", m_Comm.Size(): " << m_Comm.Size() << std::endl;
-        std::cout << "  m_AppendAggregatorCount: " << m_AppendAggregatorCount << ", m_Aggregator->m_NumAggregators: " << m_Aggregator->m_NumAggregators << std::endl;
-        std::cout << "  m_AppendSubfileCount: " << m_AppendSubfileCount << ", m_Aggregator->m_SubStreams: " << m_Aggregator->m_SubStreams << std::endl;
+        std::cout << "  m_AppendWriterCount: " << m_AppendWriterCount
+                  << ", m_Comm.Size(): " << m_Comm.Size() << std::endl;
+        std::cout << "  m_AppendAggregatorCount: " << m_AppendAggregatorCount
+                  << ", m_Aggregator->m_NumAggregators: " << m_Aggregator->m_NumAggregators
+                  << std::endl;
+        std::cout << "  m_AppendSubfileCount: " << m_AppendSubfileCount
+                  << ", m_Aggregator->m_SubStreams: " << m_Aggregator->m_SubStreams << std::endl;
     }
 
     if (!m_WriterStep || m_AppendWriterCount != static_cast<unsigned int>(m_Comm.Size()) ||

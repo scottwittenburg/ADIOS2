@@ -20,7 +20,7 @@
 
 #include "../SmallTestData.h"
 
-std::string engineName; // comes from command line
+std::string engineName;              // comes from command line
 std::string aggType = "TwoLevelShm"; // overridden on command line
 const std::size_t Nx = 10;
 using DataArray = std::array<int32_t, Nx>;

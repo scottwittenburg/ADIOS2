@@ -13,7 +13,7 @@
 
 #include <gtest/gtest.h>
 
-std::string engineName; // comes from command line
+std::string engineName;              // comes from command line
 std::string aggType = "TwoLevelShm"; // comes from command line
 
 class ADIOSReadDirectIOTest : public ::testing::Test

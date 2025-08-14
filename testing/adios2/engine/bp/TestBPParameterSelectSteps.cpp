@@ -20,7 +20,7 @@
 
 #include "../SmallTestData.h"
 
-std::string engineName; // comes from command line
+std::string engineName;              // comes from command line
 std::string aggType = "TwoLevelShm"; // overridden on command line
 constexpr std::size_t NSteps = 10;
 const std::size_t Nx = 10;
