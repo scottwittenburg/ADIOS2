@@ -1535,7 +1535,7 @@ void BP5Writer::InitTransports()
 
     // Names passed to IO AddTransport option with key "Name"
     const std::vector<std::string> transportsNames =
-        aggData.m_FileDataManager.GetFilesBaseNames(m_BBName, m_IO.m_TransportsParameters);
+        transportman::TransportMan::GetFilesBaseNames(m_BBName, m_IO.m_TransportsParameters);
 
     // /path/name.bp.dir/name.bp.rank
     aggData.m_SubStreamNames = GetBPSubStreamNames(transportsNames, m_Aggregator->m_SubStreamIndex);
@@ -1546,7 +1546,7 @@ void BP5Writer::InitTransports()
         if (m_DrainBB)
         {
             const std::vector<std::string> drainTransportNames =
-                aggData.m_FileDataManager.GetFilesBaseNames(m_Name, m_IO.m_TransportsParameters);
+                transportman::TransportMan::GetFilesBaseNames(m_Name, m_IO.m_TransportsParameters);
             aggData.m_DrainSubStreamNames =
                 GetBPSubStreamNames(drainTransportNames, m_Aggregator->m_SubStreamIndex);
             /* start up BB thread */
@@ -1672,7 +1672,7 @@ void BP5Writer::InitTransports()
         if (m_DrainBB)
         {
             const std::vector<std::string> drainTransportNames =
-                aggData.m_FileDataManager.GetFilesBaseNames(m_Name, m_IO.m_TransportsParameters);
+                transportman::TransportMan::GetFilesBaseNames(m_Name, m_IO.m_TransportsParameters);
             m_DrainMetadataFileNames = GetBPMetadataFileNames(drainTransportNames);
             m_DrainMetadataIndexFileNames = GetBPMetadataIndexFileNames(drainTransportNames);
 
