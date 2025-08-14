@@ -59,10 +59,6 @@ macro(bp_gtest_add_tests_helper testname mpi)
   gtest_add_tests_helper(${testname} ${mpi} BP Engine.BP. .BP5
     WORKING_DIRECTORY ${BP5_DIR} EXTRA_ARGS "BP5"
   )
-  # A lot of these tests pass, but some fail or hang, so comment out for now
-  # gtest_add_tests_helper(${testname} ${mpi} BP Engine.BP. .BP5.DSB
-  #   WORKING_DIRECTORY ${BP5_DIR} EXTRA_ARGS "BP5" "AggregationType=DataSizeBased"
-  # )
 endmacro()
 
 macro(async_gtest_add_tests_helper testname mpi)
@@ -217,7 +213,7 @@ bp_gtest_add_tests_helper(WriteReadBlockInfo MPI_ALLOW)
 bp_gtest_add_tests_helper(WriteReadVariableSpan MPI_ALLOW)
 bp3_bp4_gtest_add_tests_helper(TimeAggregation MPI_ALLOW)
 bp_gtest_add_tests_helper(NoXMLRecovery MPI_ALLOW)
-bp_gtest_add_tests_helper(StepsFileGlobalArray MPI_ALLOW)
+bp3_bp4_gtest_add_tests_helper(StepsFileGlobalArray MPI_ALLOW)
 bp_gtest_add_tests_helper(StepsFileLocalArray MPI_ALLOW)
 
 bp_gtest_add_tests_helper(SelectionsOnRowMajorData MPI_NONE)
@@ -239,25 +235,24 @@ if(ADIOS2_HAVE_MPI)
   bp_gtest_add_tests_helper(WriteAggregateRead MPI_ONLY)
 endif()
 
-# BP5 only for now
-gtest_add_tests_helper(ParameterSelectSteps MPI_ALLOW BP Engine.BP. .BP5
-  WORKING_DIRECTORY ${BP5_DIR} EXTRA_ARGS "BP5"
-)
-gtest_add_tests_helper(AppendAfterSteps MPI_ALLOW BP Engine.BP. .BP5
-  WORKING_DIRECTORY ${BP5_DIR} EXTRA_ARGS "BP5"
-)
-gtest_add_tests_helper(DirectIO MPI_NONE BP Engine.BP. .BP5
-  WORKING_DIRECTORY ${BP5_DIR} EXTRA_ARGS "BP5"
-)
-gtest_add_tests_helper(ReadMultithreaded MPI_NONE BP Engine.BP. .BP5
-  WORKING_DIRECTORY ${BP5_DIR} EXTRA_ARGS "BP5"
-)
-gtest_add_tests_helper(NewFileAppendMode MPI_NONE BP Engine.BP. .BP5.EWS
-  WORKING_DIRECTORY ${BP5_DIR} EXTRA_ARGS "BP5" "EveryoneWritesSerial"
-)
-gtest_add_tests_helper(NewFileAppendMode MPI_NONE BP Engine.BP. .BP5.TLS
-  WORKING_DIRECTORY ${BP5_DIR} EXTRA_ARGS "BP5" "TwoLevelShm"
-)
+macro(bp5agg_gtest_add_tests testname mpi)
+  gtest_add_tests_helper(${testname} ${mpi} BP Engine.BP. .BP5.EWS
+    WORKING_DIRECTORY ${BP5_DIR} EXTRA_ARGS "BP5" "EveryoneWritesSerial")
+  gtest_add_tests_helper(${testname} ${mpi} BP Engine.BP. .BP5.EW
+    WORKING_DIRECTORY ${BP5_DIR} EXTRA_ARGS "BP5" "EveryoneWrites")
+  gtest_add_tests_helper(${testname} ${mpi} BP Engine.BP. .BP5.TLS
+    WORKING_DIRECTORY ${BP5_DIR} EXTRA_ARGS "BP5" "TwoLevelShm")
+  gtest_add_tests_helper(${testname} ${mpi} BP Engine.BP. .BP5.DSB
+    WORKING_DIRECTORY ${BP5_DIR} EXTRA_ARGS "BP5" "DataSizeBased")
+endmacro()
+
+# BP5 only for now, so test all the aggregators while we're at it
+bp5agg_gtest_add_tests(ParameterSelectSteps MPI_ALLOW)
+bp5agg_gtest_add_tests(AppendAfterSteps MPI_ALLOW)
+bp5agg_gtest_add_tests(DirectIO MPI_NONE)
+bp5agg_gtest_add_tests(ReadMultithreaded MPI_NONE)
+bp5agg_gtest_add_tests(NewFileAppendMode MPI_NONE)
+bp5agg_gtest_add_tests(StepsFileGlobalArray MPI_ALLOW)
 
 # Only a single test is enough, pick the latest engine
 gtest_add_tests_helper(AccuracyDefaults MPI_NONE BP Engine.BP. .BP5
