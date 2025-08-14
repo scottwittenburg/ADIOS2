@@ -45,6 +45,12 @@ BP5Writer::BP5Writer(IO &io, const std::string &name, const Mode mode, helper::C
     PERFSTUBS_SCOPED_TIMER("BP5Writer::Open");
     m_IO.m_ReadStreaming = false;
 
+    // Initialize variables used in conditionals that determine code path followed
+    // by ranks during initialization
+    m_AppendSubfileCount = 0;
+    m_AppendAggregatorCount = 0;
+    m_AppendWriterCount = 0;
+
     Init();
     m_IsOpen = true;
     m_DataPosShared = false;
@@ -1428,7 +1434,7 @@ void BP5Writer::InitAggregator(const uint64_t DataSize)
         m_AggregatorDataSizeBased.InitExplicit(myPart.m_subStreams, myPart.m_subStreamIndex,
                                                myPart.m_aggregatorRank, myPart.m_rankOrder, m_Comm);
 
-        m_IAmDraining = m_AggregatorEveroneWrites.m_IsAggregator;
+        m_IAmDraining = m_AggregatorDataSizeBased.m_IsAggregator;
         m_IAmWritingData = true;
         m_Aggregator = static_cast<aggregator::MPIAggregator *>(&m_AggregatorDataSizeBased);
 
@@ -1931,6 +1937,15 @@ void BP5Writer::InitBPBuffer()
     if (m_Comm.Rank() == 0)
     {
         m_WriterDataPos.resize(m_Comm.Size());
+    }
+
+    if (m_Parameters.verbose > 2)
+    {
+        std::cout << "Rank " << m_Comm.Rank() << " deciding whether new writer map is needed" << std::endl;
+        std::cout << "  m_WriterStep: " << m_WriterStep << std::endl;
+        std::cout << "  m_AppendWriterCount: " << m_AppendWriterCount << ", m_Comm.Size(): " << m_Comm.Size() << std::endl;
+        std::cout << "  m_AppendAggregatorCount: " << m_AppendAggregatorCount << ", m_Aggregator->m_NumAggregators: " << m_Aggregator->m_NumAggregators << std::endl;
+        std::cout << "  m_AppendSubfileCount: " << m_AppendSubfileCount << ", m_Aggregator->m_SubStreams: " << m_Aggregator->m_SubStreams << std::endl;
     }
 
     if (!m_WriterStep || m_AppendWriterCount != static_cast<unsigned int>(m_Comm.Size()) ||
