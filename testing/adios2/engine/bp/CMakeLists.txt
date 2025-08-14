@@ -236,13 +236,13 @@ if(ADIOS2_HAVE_MPI)
 endif()
 
 macro(bp5agg_gtest_add_tests testname mpi)
-  gtest_add_tests_helper(${testname} ${mpi} BP Engine.BP. .BP5.EWS
+  gtest_add_tests_helper(${testname} ${mpi} BP Engine.BPAGG. .BP5.EWS
     WORKING_DIRECTORY ${BP5_DIR} EXTRA_ARGS "BP5" "EveryoneWritesSerial")
-  gtest_add_tests_helper(${testname} ${mpi} BP Engine.BP. .BP5.EW
+  gtest_add_tests_helper(${testname} ${mpi} BP Engine.BPAGG. .BP5.EW
     WORKING_DIRECTORY ${BP5_DIR} EXTRA_ARGS "BP5" "EveryoneWrites")
-  gtest_add_tests_helper(${testname} ${mpi} BP Engine.BP. .BP5.TLS
+  gtest_add_tests_helper(${testname} ${mpi} BP Engine.BPAGG. .BP5.TLS
     WORKING_DIRECTORY ${BP5_DIR} EXTRA_ARGS "BP5" "TwoLevelShm")
-  gtest_add_tests_helper(${testname} ${mpi} BP Engine.BP. .BP5.DSB
+  gtest_add_tests_helper(${testname} ${mpi} BP Engine.BPAGG. .BP5.DSB
     WORKING_DIRECTORY ${BP5_DIR} EXTRA_ARGS "BP5" "DataSizeBased")
 endmacro()
 
