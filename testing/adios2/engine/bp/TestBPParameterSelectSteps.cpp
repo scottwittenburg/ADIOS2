@@ -22,6 +22,7 @@
 
 std::string engineName;              // comes from command line
 std::string aggType = "TwoLevelShm"; // overridden on command line
+int streamingFileId = 0;
 constexpr std::size_t NSteps = 10;
 const std::size_t Nx = 10;
 using DataArray = std::array<int32_t, Nx>;
@@ -194,7 +195,8 @@ TEST_P(BPParameterSelectStepsP, Stream)
     adios2::ADIOS adios;
 #endif
 
-    std::string filename = "ParameterSelectStepsStream" + std::to_string(mpiSize) + ".bp";
+    std::string filename = "ParameterSelectStepsStream_id_" + std::to_string(streamingFileId++) +
+                           "_size_" + std::to_string(mpiSize) + ".bp";
     adios2::IO ioWrite = adios.DeclareIO("TestIOWrite");
     ioWrite.SetEngine(engineName);
     ioWrite.SetParameter("AggregationType", aggType);

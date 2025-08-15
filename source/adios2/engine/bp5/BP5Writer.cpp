@@ -1087,6 +1087,7 @@ void BP5Writer::Init()
     m_BP5Serializer.m_Engine = this;
     m_RankMPI = m_Comm.Rank();
     InitParameters();
+    InitMetadataTransports();
 
     if (m_Parameters.AggregationType != (int)AggregationType::DataSizeBased)
     {
@@ -1489,7 +1490,7 @@ void BP5Writer::InitAggregator(const uint64_t DataSize)
     }
 }
 
-void BP5Writer::InitTransports()
+void BP5Writer::InitMetadataTransports()
 {
     if (m_IO.m_TransportsParameters.empty())
     {
@@ -1512,6 +1513,81 @@ void BP5Writer::InitTransports()
         should write if BB is turned on
     */
 
+    // Names passed to IO AddTransport option with key "Name"
+    m_TransportNames =
+        transportman::TransportMan::GetFilesBaseNames(m_BBName, m_IO.m_TransportsParameters);
+
+    /* Create the directories either on target or burst buffer if used */
+    //    m_BP4Serializer.m_Profiler.Start("mkdir");
+
+    if (m_Comm.Rank() == 0)
+    {
+        m_MetadataFileNames = GetBPMetadataFileNames(m_TransportNames);
+        m_MetaMetadataFileNames = GetBPMetaMetadataFileNames(m_TransportNames);
+        m_MetadataIndexFileNames = GetBPMetadataIndexFileNames(m_TransportNames);
+    }
+
+    m_FileMetadataManager.MkDirsBarrier(m_MetadataFileNames, m_IO.m_TransportsParameters,
+                                        m_Parameters.NodeLocal || m_WriteToBB);
+
+    /* Everyone opens its data file. Each aggregation chain opens
+       one data file and does so in chain, not everyone at once */
+    if (m_Parameters.AsyncOpen)
+    {
+        for (size_t i = 0; i < m_IO.m_TransportsParameters.size(); ++i)
+        {
+            m_IO.m_TransportsParameters[i]["asyncopen"] = "true";
+        }
+    }
+    if (m_Parameters.DirectIO)
+    {
+        for (size_t i = 0; i < m_IO.m_TransportsParameters.size(); ++i)
+        {
+            m_IO.m_TransportsParameters[i]["DirectIO"] = "true";
+        }
+    }
+
+    if (m_Comm.Rank() == 0)
+    {
+        if (m_Parameters.verbose > 1)
+        {
+            std::cout << "Rank " << m_Comm.Rank() << " opening metadata files" << std::endl;
+        }
+        // force turn off directio to metadata files
+        for (size_t i = 0; i < m_IO.m_TransportsParameters.size(); ++i)
+        {
+            m_IO.m_TransportsParameters[i]["DirectIO"] = "false";
+        }
+        m_FileMetaMetadataManager.OpenFiles(m_MetaMetadataFileNames, m_OpenMode,
+                                            m_IO.m_TransportsParameters, true);
+
+        m_FileMetadataManager.OpenFiles(m_MetadataFileNames, m_OpenMode,
+                                        m_IO.m_TransportsParameters, true);
+
+        m_FileMetadataIndexManager.OpenFiles(m_MetadataIndexFileNames, m_OpenMode,
+                                             m_IO.m_TransportsParameters, true);
+
+        if (m_DrainBB)
+        {
+            const std::vector<std::string> drainTransportNames =
+                transportman::TransportMan::GetFilesBaseNames(m_Name, m_IO.m_TransportsParameters);
+            m_DrainMetadataFileNames = GetBPMetadataFileNames(drainTransportNames);
+            m_DrainMetadataIndexFileNames = GetBPMetadataIndexFileNames(drainTransportNames);
+
+            for (const auto &name : m_DrainMetadataFileNames)
+            {
+                m_FileDrainer.AddOperationOpen(name, m_OpenMode);
+            }
+            for (const auto &name : m_DrainMetadataIndexFileNames)
+            {
+                m_FileDrainer.AddOperationOpen(name, m_OpenMode);
+            }
+        }
+    }
+}
+
+void BP5Writer::InitTransports()
+{
     std::string cacheKey = GetCacheKey(m_Aggregator);
     auto search = m_AggregatorSpecifics.find(cacheKey);
     bool cacheHit = false;
@@ -1533,12 +1609,9 @@ void BP5Writer::InitTransports()
 
     AggTransportData &aggData = m_AggregatorSpecifics.at(cacheKey);
 
-    // Names passed to IO AddTransport option with key "Name"
-    const std::vector<std::string> transportsNames =
-        transportman::TransportMan::GetFilesBaseNames(m_BBName, m_IO.m_TransportsParameters);
-
     // /path/name.bp.dir/name.bp.rank
-    aggData.m_SubStreamNames = GetBPSubStreamNames(transportsNames, m_Aggregator->m_SubStreamIndex);
+    aggData.m_SubStreamNames =
+        GetBPSubStreamNames(m_TransportNames, m_Aggregator->m_SubStreamIndex);
 
     if (m_IAmDraining)
     {
@@ -1557,40 +1630,12 @@ void BP5Writer::InitTransports()
         }
     }
 
-    /* Create the directories either on target or burst buffer if used */
-    //    m_BP4Serializer.m_Profiler.Start("mkdir");
-
-    if (m_Comm.Rank() == 0 && m_WriterStep == 0)
-    {
-        m_MetadataFileNames = GetBPMetadataFileNames(transportsNames);
-        m_MetaMetadataFileNames = GetBPMetaMetadataFileNames(transportsNames);
-        m_MetadataIndexFileNames = GetBPMetadataIndexFileNames(transportsNames);
-    }
-
-    m_FileMetadataManager.MkDirsBarrier(m_MetadataFileNames, m_IO.m_TransportsParameters,
-                                        m_Parameters.NodeLocal || m_WriteToBB);
     /* Create the directories on burst buffer if used */
     if (m_DrainBB)
     {
         /* Create the directories on target anyway by main thread */
         aggData.m_FileDataManager.MkDirsBarrier(
             aggData.m_DrainSubStreamNames, m_IO.m_TransportsParameters, m_Parameters.NodeLocal);
-    }
-    /* Everyone opens its data file. Each aggregation chain opens
-       one data file and does so in chain, not everyone at once */
-    if (m_Parameters.AsyncOpen)
-    {
-        for (size_t i = 0; i < m_IO.m_TransportsParameters.size(); ++i)
-        {
-            m_IO.m_TransportsParameters[i]["asyncopen"] = "true";
-        }
-    }
-    if (m_Parameters.DirectIO)
-    {
-        for (size_t i = 0; i < m_IO.m_TransportsParameters.size(); ++i)
-        {
-            m_IO.m_TransportsParameters[i]["DirectIO"] = "true";
-        }
     }
 
     helper::Comm openSyncComm;
@@ -1606,7 +1651,6 @@ void BP5Writer::InitTransports()
         DataWritingComm = &openSyncComm;
     }
 
-    bool useProfiler = true;
     if (m_IAmWritingData)
     {
         if (!cacheHit)
@@ -1628,7 +1672,7 @@ void BP5Writer::InitTransports()
                 std::cout << "Rank " << m_Comm.Rank() << " opening data file" << std::endl;
             }
             aggData.m_FileDataManager.OpenFiles(aggData.m_SubStreamNames, mode,
-                                                m_IO.m_TransportsParameters, useProfiler,
+                                                m_IO.m_TransportsParameters, true,
                                                 *DataWritingComm);
         }
     }
@@ -1643,44 +1687,6 @@ void BP5Writer::InitTransports()
         if (m_DrainBB)
         {
             for (const auto &name : aggData.m_DrainSubStreamNames)
-            {
-                m_FileDrainer.AddOperationOpen(name, m_OpenMode);
-            }
-        }
-    }
-
-    if (m_Comm.Rank() == 0 && m_WriterStep == 0)
-    {
-        if (m_Parameters.verbose > 1)
-        {
-            std::cout << "Rank " << m_Comm.Rank() << " opening metadata files" << std::endl;
-        }
-        // force turn off directio to metadata files
-        for (size_t i = 0; i < m_IO.m_TransportsParameters.size(); ++i)
-        {
-            m_IO.m_TransportsParameters[i]["DirectIO"] = "false";
-        }
-        m_FileMetaMetadataManager.OpenFiles(m_MetaMetadataFileNames, m_OpenMode,
-                                            m_IO.m_TransportsParameters, useProfiler);
-
-        m_FileMetadataManager.OpenFiles(m_MetadataFileNames, m_OpenMode,
-                                        m_IO.m_TransportsParameters, useProfiler);
-
-        m_FileMetadataIndexManager.OpenFiles(m_MetadataIndexFileNames, m_OpenMode,
-                                             m_IO.m_TransportsParameters, useProfiler);
-
-        if (m_DrainBB)
-        {
-            const std::vector<std::string> drainTransportNames =
-                transportman::TransportMan::GetFilesBaseNames(m_Name, m_IO.m_TransportsParameters);
-            m_DrainMetadataFileNames = GetBPMetadataFileNames(drainTransportNames);
-            m_DrainMetadataIndexFileNames = GetBPMetadataIndexFileNames(drainTransportNames);
-
-            for (const auto &name : m_DrainMetadataFileNames)
-            {
-                m_FileDrainer.AddOperationOpen(name, m_OpenMode);
-            }
-            for (const auto &name : m_DrainMetadataIndexFileNames)
             {
                 m_FileDrainer.AddOperationOpen(name, m_OpenMode);
             }

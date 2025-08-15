@@ -107,6 +107,8 @@ private:
      */
     std::string m_BBName;
 
+    std::vector<std::string> m_TransportNames;
+
     std::vector<std::string> m_MetadataFileNames;
     std::vector<std::string> m_DrainMetadataFileNames;
     std::vector<std::string> m_MetaMetadataFileNames;
@@ -120,7 +122,9 @@ private:
     void InitParameters() final;
     /** Set up the aggregator */
     void InitAggregator(const uint64_t DataSize = 1);
-    /** Complete opening/createing metadata and data files */
+    /** Create and open metadata files */
+    void InitMetadataTransports();
+    /** Complete opening/createing data files */
     void InitTransports() final;
     /** Allocates memory and starts a PG group */
     void InitBPBuffer();
