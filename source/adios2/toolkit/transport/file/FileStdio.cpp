@@ -127,25 +127,21 @@ void FileStdio::OpenChain(const std::string &name, Mode openMode, const helper::
         if (async)
         {
             m_IsOpening = true;
-            std::cout << "FileStdio - Open async for write: " << name << std::endl;
             m_OpenFuture = std::async(std::launch::async, lf_AsyncOpenWrite, name);
         }
         else
         {
             errno = 0;
-            std::cout << "FileStdio - Open immediate for write: " << name << std::endl;
             m_File = std::fopen(name.c_str(), "wb");
         }
         break;
     case Mode::Append:
         errno = 0;
-        std::cout << "FileStdio - Open for read/append: " << name << std::endl;
         m_File = std::fopen(name.c_str(), "rwb");
         std::fseek(m_File, 0, SEEK_END);
         break;
     case Mode::Read:
         errno = 0;
-        std::cout << "FileStdio - Open for read: " << name << std::endl;
         m_File = std::fopen(name.c_str(), "rb");
         break;
     default:

@@ -69,13 +69,11 @@ void FileFStream::Open(const std::string &name, const Mode openMode, const bool 
         if (async)
         {
             m_IsOpening = true;
-            std::cout << "FileFStream - Open async for write: " << name << std::endl;
             m_OpenFuture = std::async(std::launch::async, lf_AsyncOpenWrite, name);
         }
         else
         {
             ProfilerStart("open");
-            std::cout << "FileFStream - Open immediate for write: " << name << std::endl;
             m_FileStream.open(name, std::fstream::out | std::fstream::binary | std::fstream::trunc);
             ProfilerStop("open");
         }
@@ -83,7 +81,6 @@ void FileFStream::Open(const std::string &name, const Mode openMode, const bool 
 
     case Mode::Append:
         ProfilerStart("open");
-        std::cout << "FileFStream - Open for read/append: " << name << std::endl;
         m_FileStream.open(name, std::fstream::in | std::fstream::out | std::fstream::binary);
         m_FileStream.seekp(0, std::ios_base::end);
         ProfilerStop("open");
@@ -91,7 +88,6 @@ void FileFStream::Open(const std::string &name, const Mode openMode, const bool 
 
     case Mode::Read:
         ProfilerStart("open");
-        std::cout << "FileFStream - Open for read: " << name << std::endl;
         m_FileStream.open(name, std::fstream::in | std::fstream::binary);
         ProfilerStop("open");
         break;
