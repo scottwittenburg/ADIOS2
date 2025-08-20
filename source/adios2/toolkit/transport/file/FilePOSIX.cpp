@@ -133,12 +133,14 @@ void FilePOSIX::Open(const std::string &name, const Mode openMode, const bool as
         if (async)
         {
             m_IsOpening = true;
+            std::cout << "FilePOSIX - Open async for write: " << name << std::endl;
             m_OpenFuture = std::async(std::launch::async, lf_AsyncOpenWrite, name, directio);
         }
         else
         {
             ProfilerStart("open");
             errno = 0;
+            std::cout << "FilePOSIX - Open immediate for write, " << name << std::endl;
             m_FileDescriptor =
                 open(m_Name.c_str(),
                      __GetOpenFlag(O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, directio), 0666);
@@ -150,6 +152,7 @@ void FilePOSIX::Open(const std::string &name, const Mode openMode, const bool as
     case Mode::Append:
         ProfilerStart("open");
         errno = 0;
+        std::cout << "FilePOSIX - Open for read/append: " << name << std::endl;
         m_FileDescriptor =
             open(m_Name.c_str(), __GetOpenFlag(O_RDWR | O_CREAT | O_BINARY, directio), 0777);
         lseek(m_FileDescriptor, 0, SEEK_END);
@@ -160,6 +163,7 @@ void FilePOSIX::Open(const std::string &name, const Mode openMode, const bool as
     case Mode::Read:
         ProfilerStart("open");
         errno = 0;
+        std::cout << "FilePOSIX - Open for read: " << name << std::endl;
         m_FileDescriptor = open(m_Name.c_str(), O_RDONLY | O_BINARY);
         m_Errno = errno;
         ProfilerStop("open");
