@@ -60,13 +60,14 @@ public:
     }
 
     bool OutputWritten = false;
+    std::string OutputFileName;
 
-    void CreateOutput()
+    std::string CreateOutput()
     {
         // This is not really a test but to create a dataset for all read tests
         if (OutputWritten)
         {
-            return;
+            return OutputFileName;
         }
         int mpiRank = 0, mpiSize = 1;
 #if ADIOS2_USE_MPI
@@ -79,11 +80,13 @@ public:
 #else
         adios2::ADIOS adios;
 #endif
-        std::string filename = "ParameterSelectSteps" + std::to_string(mpiSize) + ".bp";
+        OutputFileName = "ParameterSelectSteps_agg_" + aggType + "_id_" +
+                         std::to_string(streamingFileId++) + "_size_" +
+                         std::to_string(mpiSize) + ".bp";
         adios2::IO ioWrite = adios.DeclareIO("TestIOWrite");
         ioWrite.SetEngine(engineName);
         ioWrite.SetParameter("AggregationType", aggType);
-        adios2::Engine engine = ioWrite.Open(filename, adios2::Mode::Write);
+        adios2::Engine engine = ioWrite.Open(OutputFileName, adios2::Mode::Write);
         // Number of elements per process
         const std::size_t Nx = 10;
         adios2::Dims shape{static_cast<unsigned int>(mpiSize * Nx)};
@@ -105,6 +108,8 @@ public:
         }
         engine.Close();
         OutputWritten = true;
+
+        return OutputFileName;
     }
 };
 
@@ -135,8 +140,8 @@ TEST_P(BPParameterSelectStepsP, Read)
 #else
     adios2::ADIOS adios;
 #endif
-    CreateOutput();
-    std::string filename = "ParameterSelectSteps" + std::to_string(mpiSize) + ".bp";
+
+    std::string filename = CreateOutput();
     adios2::IO ioRead = adios.DeclareIO("TestIORead");
     ioRead.SetEngine(engineName);
     ioRead.SetParameter("SelectSteps", selection);
@@ -195,8 +200,9 @@ TEST_P(BPParameterSelectStepsP, Stream)
     adios2::ADIOS adios;
 #endif
 
-    std::string filename = "ParameterSelectStepsStream_id_" + std::to_string(streamingFileId++) +
-                           "_size_" + std::to_string(mpiSize) + ".bp";
+    std::string filename = "ParameterSelectStepsStream_agg_" + aggType + "_id_" +
+                           std::to_string(streamingFileId++) + "_size_" +
+                           std::to_string(mpiSize) + ".bp";
     adios2::IO ioWrite = adios.DeclareIO("TestIOWrite");
     ioWrite.SetEngine(engineName);
     ioWrite.SetParameter("AggregationType", aggType);
