@@ -88,9 +88,9 @@ TEST_P(BPAppendAfterStepsP, Test)
               << " steps, then appending " << nSteps << " steps again with parameter "
               << nAppendAfterSteps << std::endl;
 
-    std::string filename = "AppendAfterSteps_N" + std::to_string(mpiSize) + "_Steps" +
-                           std::to_string(nSteps) + "_Append_" + std::to_string(nAppendAfterSteps) +
-                           ".bp";
+    std::string filename = "AppendAfterSteps_agg_" + aggType + "_N" + std::to_string(mpiSize) +
+                           "_Steps" + std::to_string(nSteps) + "_Append_" +
+                           std::to_string(nAppendAfterSteps) + ".bp";
     size_t totalNSteps = 0;
 
     {
