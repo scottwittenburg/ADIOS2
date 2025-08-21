@@ -88,12 +88,14 @@ public:
         std::string filename;
         if (stream)
         {
-            StreamOutputFileName = "BPReadMultithreaded_agg_" + aggType + "_size_" + std::to_string(mpiSize) + "_Stream.bp";
+            StreamOutputFileName = "BPReadMultithreaded_agg_" + aggType + "_size_" +
+                                   std::to_string(mpiSize) + "_Stream.bp";
             filename = StreamOutputFileName;
         }
         else
         {
-            FileOutputFileName = "BPReadMultithreaded_agg_" + aggType + "_size_" + std::to_string(mpiSize) + "_File.bp";
+            FileOutputFileName = "BPReadMultithreaded_agg_" + aggType + "_size_" +
+                                 std::to_string(mpiSize) + "_File.bp";
             filename = FileOutputFileName;
         }
         adios2::IO ioWrite = adios.DeclareIO("TestIOWrite");
