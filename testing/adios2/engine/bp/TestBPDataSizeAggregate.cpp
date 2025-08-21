@@ -13,6 +13,13 @@ using namespace adios2;
 
 namespace
 {
+int worldRank, worldSize;
+uint64_t nSteps = 1;
+std::string aggregationType = "DataSizeBased"; // comes from command line
+std::string numberOfSubFiles = "2";            // comes from command line
+std::string numberOfSteps = "1";               // comes from command line
+std::string verbose = "0";
+
 uint64_t sumFirstN(const std::vector<uint64_t> &vec, uint64_t n)
 {
     if (n > vec.size())
@@ -29,39 +36,31 @@ uint64_t sumFirstN(const std::vector<uint64_t> &vec, uint64_t n)
     return sum;
 }
 
-void swap(std::vector<uint64_t> &vec, uint64_t idx1, uint64_t idx2)
-{
-    if (idx1 >= vec.size() || idx2 >= vec.size())
-    {
-        std::cout << "Index out of range (swap), size=" << vec.size() << ", idx1=" << idx1
-                  << ", idx2=" << idx2 << std::endl;
-        throw std::runtime_error("Index out of range (swap)");
-    }
-    uint64_t tmp = vec[idx1];
-    vec[idx1] = vec[idx2];
-    vec[idx2] = tmp;
-}
-
 void shuffle(std::vector<uint64_t> &vec)
 {
-    size_t nRanks = vec.size();
-    if (nRanks > 2)
-    {
-        // Swap the first and last (by default that's smallest and largest)
-        swap(vec, 0, nRanks - 1);
-    }
-    else
-    {
-        std::cout << "Cannot shuffle rank data sizes with fewer than three ranks" << std::endl;
-    }
-}
+    // Shifts every element to the right one place, and the last element
+    // is placed in the first slot.
+    size_t nElts = vec.size();
 
-int worldRank, worldSize;
-uint64_t nSteps = 1;
-std::string aggregationType = "DataSizeBased"; // comes from command line
-std::string numberOfSubFiles = "2";            // comes from command line
-std::string numberOfSteps = "1";               // comes from command line
-std::string verbose = "0";
+    if (nElts <= 1)
+    {
+        return;
+    }
+
+    // Copy the last element to the side for later
+    uint64_t lastElt = vec[nElts - 1];
+    int index = static_cast<int>(nElts - 2);
+
+    // Copy each element into the slot to its right
+    while (index >= 0)
+    {
+        vec[index + 1] = vec[index];
+        index -= 1;
+    }
+
+    // Copy the last element into slot 0
+    vec[0] = lastElt;
+}
 }
 
 class DSATest : public ::testing::Test
@@ -74,24 +73,24 @@ TEST_F(DSATest, TestWriteUnbalancedData)
 {
     adios2::ADIOS adios(MPI_COMM_WORLD);
 
-    std::vector<uint64_t> rankDataSizes(worldSize);
-    std::iota(rankDataSizes.begin(), rankDataSizes.end(), 1);
+    std::vector<uint64_t> columnsPerRank(worldSize);
+    std::iota(columnsPerRank.begin(), columnsPerRank.end(), 1);
 
     if (worldRank == 0)
     {
         std::cout << "Number of timesteps: " << nSteps << std::endl;
         std::cout << "Aggregation type: " << aggregationType << std::endl;
         std::cout << "Number of subfiles: " << numberOfSubFiles << std::endl;
-        std::cout << "Rank data sizes (in number of columns)" << std::endl;
-        for (size_t i = 0; i < rankDataSizes.size(); ++i)
+        std::cout << "Columns per rank:" << std::endl;
+        for (size_t i = 0; i < columnsPerRank.size(); ++i)
         {
-            std::cout << rankDataSizes[i] << " ";
+            std::cout << columnsPerRank[i] << " ";
         }
         std::cout << std::endl;
     }
 
     uint64_t globalNx = worldSize;
-    uint64_t globalNy = sumFirstN(rankDataSizes, rankDataSizes.size());
+    uint64_t globalNy = sumFirstN(columnsPerRank, columnsPerRank.size());
     uint64_t largestValue = (globalNx * globalNy) - 1;
 
     {
@@ -110,8 +109,8 @@ TEST_F(DSATest, TestWriteUnbalancedData)
         for (size_t step = 0; step < nSteps; ++step)
         {
             // Define local data, size varies by rank
-            uint64_t localNy = rankDataSizes[worldRank];
-            uint64_t localOffset = sumFirstN(rankDataSizes, worldRank);
+            uint64_t localNy = columnsPerRank[worldRank];
+            uint64_t localOffset = sumFirstN(columnsPerRank, worldRank);
             std::vector<uint64_t> rankData;
             rankData.resize(globalNx * localNy);
 
@@ -138,7 +137,7 @@ TEST_F(DSATest, TestWriteUnbalancedData)
             if (step < nSteps - 1)
             {
                 // If we're doing another time step, shuffle rank data sizes
-                shuffle(rankDataSizes);
+                shuffle(columnsPerRank);
             }
         }
 
@@ -165,8 +164,8 @@ TEST_F(DSATest, TestWriteUnbalancedData)
         for (size_t step = 0; step < nSteps; ++step)
         {
             // Define local data, size varies by rank
-            uint64_t localNy = rankDataSizes[worldRank];
-            uint64_t localOffset = sumFirstN(rankDataSizes, worldRank);
+            uint64_t localNy = columnsPerRank[worldRank];
+            uint64_t localOffset = sumFirstN(columnsPerRank, worldRank);
             uint64_t rankDataSize = globalNx * localNy;
             std::vector<uint64_t> array;
 
