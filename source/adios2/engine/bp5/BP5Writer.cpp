@@ -489,7 +489,7 @@ void BP5Writer::WriteData_EveryoneWrites(format::BufferV *Data, bool SerializedW
         // early-flushing ranks to become wiped out. Since ranks will all be synchronized
         // during metadata aggregation anyway, let's make sure that no writers of this
         // subfile are still writing when ranks start flushing.
-        m_Comm.Barrier();
+        a->m_Comm.Barrier();
     }
 
     if (m_Parameters.verbose > 2)
