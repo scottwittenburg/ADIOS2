@@ -85,6 +85,30 @@ std::string ReadModeToString(ReadMode r)
     return "unknown";
 }
 
+std::string AggregationTypeAlias(const std::string &aggregationType)
+{
+    if (aggregationType == "DataSizeBased")
+    {
+        return "DSB";
+    }
+    else if (aggregationType == "EveryoneWritesSerial")
+    {
+        return "EWS";
+    }
+    else if (aggregationType == "EveryoneWrites")
+    {
+        return "EW";
+    }
+    else if (aggregationType == "TwoLevelShm")
+    {
+        return "TLS";
+    }
+    else
+    {
+        return "NR";
+    }
+}
+
 class BPStepsFileGlobalArrayReaders : public BPStepsFileGlobalArray,
                                       public ::testing::WithParamInterface<ReadMode>
 {
@@ -96,8 +120,8 @@ protected:
 TEST_P(BPStepsFileGlobalArrayReaders, EveryStep)
 {
     const ReadMode readMode = GetReadMode();
-    std::string fname_prefix =
-        "BPStepsFileGlobalArray.EveryStep." + ReadModeToString(readMode) + ".agg-" + aggType;
+    std::string fname_prefix = "BPStepsFileGlobalArray.EveryStep." + ReadModeToString(readMode) +
+                               "." + AggregationTypeAlias(aggType);
     int mpiRank = 0, mpiSize = 1;
     const std::size_t NSteps = 4;
 
@@ -352,8 +376,8 @@ TEST_P(BPStepsFileGlobalArrayReaders, EveryStep)
 TEST_P(BPStepsFileGlobalArrayReaders, NewVarPerStep)
 {
     const ReadMode readMode = GetReadMode();
-    std::string fname_prefix =
-        "BPStepsFileGlobalArray.NewVarPerStep." + ReadModeToString(readMode) + ".agg-" + aggType;
+    std::string fname_prefix = "BPStepsFileGlobalArray.NewVarPerStep." +
+                               ReadModeToString(readMode) + "." + AggregationTypeAlias(aggType);
     int mpiRank = 0, mpiSize = 1;
     const std::size_t NSteps = 4;
 
@@ -637,7 +661,7 @@ TEST_P(BPStepsFileGlobalArrayParameters, EveryOtherStep)
     const ReadMode readMode = GetReadMode();
     std::string fname_prefix = "BPStepsFileGlobalArray.EveryOtherStep.Steps" +
                                std::to_string(NSteps) + ".Oddity" + std::to_string(Oddity) + "." +
-                               ReadModeToString(readMode) + ".agg-" + aggType;
+                               ReadModeToString(readMode) + "." + AggregationTypeAlias(aggType);
     int mpiRank = 0, mpiSize = 1;
 
 #if ADIOS2_USE_MPI
