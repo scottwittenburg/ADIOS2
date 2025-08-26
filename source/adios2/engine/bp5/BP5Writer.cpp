@@ -385,6 +385,14 @@ void BP5Writer::WriteData(format::BufferV *Data)
                                                      std::to_string(m_Parameters.AggregationType) +
                                                      "is not supported in BP5");
         }
+        if (m_Parameters.AggregationType == (int)AggregationType::DataSizeBased)
+        {
+            // In some cases (e.g. with the HeatTransferMxN example/test) it seems that
+            // allowing some ranks to get here and flush while other ranks are still
+            // engaged in writing the same file can cause the data written by those
+            // early-flushing ranks to become wiped out.
+            m_Comm.Barrier();
+        }
         AggTransportData &aggData = m_AggregatorSpecifics.at(GetCacheKey(m_Aggregator));
         aggData.m_FileDataManager.FlushFiles();
         delete Data;
