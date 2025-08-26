@@ -31,12 +31,14 @@ TEST_F(ADIOSReadDirectIOTest, BufferResize)
 
     int mpiRank = 0, mpiSize = 1;
 
+    std::string filename = "ADIOSDirectIO.agg-" + aggType;
+
 #if ADIOS2_USE_MPI
     MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank);
     MPI_Comm_size(MPI_COMM_WORLD, &mpiSize);
-    std::string filename = "ADIOSDirectIO_MPI.bp";
+    filename += "_MPI.bp";
 #else
-    std::string filename = "ADIOSDirectIO.bp";
+    filename += ".bp";
 #endif
 
     // Write test data using BP
