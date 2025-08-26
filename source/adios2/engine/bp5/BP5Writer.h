@@ -271,8 +271,16 @@ private:
      * data-size based aggregation
      */
     std::vector<uint64_t> m_SubstreamDataPos;
+
+    /**
+     * To avoid reading from the above vector unless we have explicitly
+     * initialized it
+     */
     bool m_DataPosShared;
 
+    /**
+     * To avoid the possibility of ranks changing subfiles during a single step
+     */
     bool m_AggregatorInitializedThisStep;
 
     bool m_MarshalAttributesNecessary = true;

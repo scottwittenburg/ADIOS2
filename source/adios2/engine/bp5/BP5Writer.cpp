@@ -37,9 +37,8 @@ using namespace adios2::format;
 
 BP5Writer::BP5Writer(IO &io, const std::string &name, const Mode mode, helper::Comm comm)
 : Engine("BP5Writer", io, name, mode, std::move(comm)), m_BP5Serializer(),
-  /*m_FileDataManager(io, m_Comm),*/ m_FileMetadataManager(io, m_Comm),
-  m_FileMetadataIndexManager(io, m_Comm), m_FileMetaMetadataManager(io, m_Comm), m_Profiler(m_Comm),
-  m_AggregatorInitializedThisStep(false)
+  m_FileMetadataManager(io, m_Comm), m_FileMetadataIndexManager(io, m_Comm),
+  m_FileMetaMetadataManager(io, m_Comm), m_Profiler(m_Comm), m_AggregatorInitializedThisStep(false)
 {
     m_EngineStart = Now();
     PERFSTUBS_SCOPED_TIMER("BP5Writer::Open");
@@ -59,10 +58,7 @@ BP5Writer::BP5Writer(IO &io, const std::string &name, const Mode mode, helper::C
 std::string BP5Writer::GetCacheKey(aggregator::MPIAggregator *aggregator)
 {
     std::stringstream ss;
-    ss << "ssidx:" << aggregator->m_SubStreamIndex << "-";
-    //    << "aggrank:" << aggregator->m_AggregatorRank << "-"
-    //    << "order:" << aggregator->m_Rank << "-"
-    //    << "isagg:" << aggregator->m_IsAggregator << "-";
+    ss << "ssidx:" << aggregator->m_SubStreamIndex;
     return ss.str();
 }
 
@@ -1097,6 +1093,10 @@ void BP5Writer::Init()
     InitParameters();
     InitMetadataTransports();
 
+    // For data size based aggregation, we can't initialize the aggregator
+    // until we actually have the data in our hands to know home much each
+    // rank needs to write. So in that case, we defer this initialization
+    // until WriteData(), and subsequently redo it on each time step.
     if (m_Parameters.AggregationType != (int)AggregationType::DataSizeBased)
     {
         InitAggregator();
