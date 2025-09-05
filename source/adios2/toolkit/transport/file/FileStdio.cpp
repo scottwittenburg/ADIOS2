@@ -132,7 +132,14 @@ void FileStdio::OpenChain(const std::string &name, Mode openMode, const helper::
         else
         {
             errno = 0;
-            m_File = std::fopen(name.c_str(), "wb");
+            if (chainComm.Rank() == 0)
+            {
+                m_File = std::fopen(name.c_str(), "wb");
+            }
+            else
+            {
+                m_File = std::fopen(name.c_str(), "ab");
+            }
         }
         break;
     case Mode::Append:
