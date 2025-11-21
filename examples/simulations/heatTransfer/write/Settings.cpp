@@ -14,6 +14,8 @@
 
 #include <cstdlib>
 
+#include <cstring>
+
 #include <stdexcept>
 
 static unsigned int convertToUint(std::string varName, char *arg)
@@ -52,6 +54,15 @@ Settings::Settings(int argc, char *argv[], int rank, int nproc) : rank{rank}
     if (npx * npy != this->nproc)
     {
         throw std::invalid_argument("N*M must equal the number of processes");
+    }
+
+    this->doPDW = false;
+
+    // another argument tells ADIOS2 writer to issue PerformDataWrite() call
+    if (argc > 9)
+    {
+        if (strcmp(argv[9], "") != 0)
+        this->doPDW = true;
     }
 
     // calculate global array size and the local offsets in that global space

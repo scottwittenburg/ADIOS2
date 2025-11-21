@@ -48,6 +48,9 @@ public:
     int rank_up;
     int rank_down;
 
+    // Whether or not to invoke PerformDataWrite() after Put() in ADIOS2 writer
+    bool doPDW;
+
     /** true: std::async Write, false (default): sync */
     bool async = false;
 

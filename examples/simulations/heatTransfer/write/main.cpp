@@ -32,7 +32,8 @@ void printUsage()
               << "  nx:     local array size in X dimension per processor\n"
               << "  ny:     local array size in Y dimension per processor\n"
               << "  steps:  the total number of steps to output\n"
-              << "  iterations: one step consist of this many iterations\n\n";
+              << "  iterations: one step consist of this many iterations\n"
+              << "  doPDW:  (optional, ADIOS2 only) any argument means invoke PerformDataWrite() \n\n";
 }
 
 int main(int argc, char *argv[])

@@ -70,5 +70,10 @@ void IO::write(int step, const HeatTransfer &ht, const Settings &s, MPI_Comm com
     bpWriter.BeginStep();
     std::vector<double> v = ht.data_noghost();
     bpWriter.Put<double>(varT, v.data());
+    if (s.doPDW)
+    {
+        std::cout << "Explicitly calling PerformDataWrite()" << std::endl;
+        bpWriter.PerformDataWrite();
+    }
     bpWriter.EndStep();
 }
