@@ -26,6 +26,50 @@
 #include <memory> // make_shared
 #include <sstream>
 
+namespace
+{
+#if REROUTING_ENABLE_DELAYED_WRITE
+// Turn this feature on at configure time with:
+//
+//     -DREROUTING_ENABLE_DELAYED_WRITE:BOOL=ON
+//
+size_t GetWriteDelay(int subStreamIdx)
+{
+   size_t delayMillis = 0;
+
+    try
+    {
+        std::cout << "Looking for write delay environment variable" << std::endl;
+
+        std::string envVarName("REROUTING_WRITE_DELAY_");
+        envVarName += std::to_string(subStreamIdx);
+        const char *delayEnvVal = std::getenv(envVarName.c_str());
+        if (delayEnvVal)
+        {
+            std::cout << "Found environment variable " << envVarName.c_str() << " = "
+                      << delayEnvVal << std::endl;
+
+            // try to parse the value of the env variable value as a number
+            delayMillis = std::stol({delayEnvVal});
+
+            if (delayMillis > 0)
+            {
+                std::cout << "Parsed environment variable " << envVarName.c_str() << " = "
+                          << delayMillis << std::endl;
+            }
+        }
+    }
+    catch (std::exception const& ex)
+    {
+        std::cout << "Error when looking for delay environment variable" << ex.what() << std::endl;
+    }
+
+    return delayMillis;
+}
+
+};
+#endif
+
 namespace adios2
 {
 namespace core
@@ -52,6 +96,37 @@ BP5Writer::BP5Writer(IO &io, const std::string &name, const Mode mode, helper::C
     Init();
     m_IsOpen = true;
     m_DataPosShared = false;
+}
+
+void BP5Writer::PossiblyDelayWrite()
+{
+#if REROUTING_ENABLE_DELAYED_WRITE
+    // Only check the environment and try to parse the variable once per process
+    static size_t writeDelay = GetWriteDelay(m_Aggregator->m_SubStreamIndex);
+
+    if (writeDelay > 0)
+    {
+        if (m_Parameters.verbose > 1)
+        {
+            std::cout << "Rank " << this->m_RankMPI << " delaying " << writeDelay
+                    << " milliseconds before writing." << std::endl;
+        }
+
+        try
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(writeDelay));
+        }
+        catch (std::exception const& ex)
+        {
+            std::cout << "Exception when sleeping for " << writeDelay << " milliseconds." << std::endl;
+        }
+    }
+
+    if (m_Parameters.verbose > 1)
+    {
+        std::cout << "Rank " << m_RankMPI << " proceeding with write" << std::endl;
+    }
+#endif
 }
 
 std::string BP5Writer::GetCacheKey(aggregator::MPIAggregator *aggregator)

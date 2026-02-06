@@ -315,6 +315,10 @@ private:
     std::condition_variable m_WriteCV;
     bool m_ReadyToWrite;
     bool m_FinishedWriting;
+    // Check environment for a delay time and sleep. This is just an empty private function
+    // that never gets called, unless enabled at configure time using the following cmake
+    // cache option: -DREROUTING_ENABLE_DELAYED_WRITE:BOOL=ON
+    void PossiblyDelayWrite();
 
     /* Async write's future */
     std::future<int> m_WriteFuture;
