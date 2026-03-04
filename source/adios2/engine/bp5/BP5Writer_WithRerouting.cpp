@@ -252,8 +252,8 @@ void BP5Writer::ReroutingCommunicationLoop()
     if (iAmGlobalCoord)
     {
         // Global coordinator initializes the state it tracks for each subcoord
-        groupState.resize(m_CommAggregators.Size());
-        subCoordRanks.resize(m_CommAggregators.Size());
+        groupState.resize(m_Partitioning.m_Partitions.size());
+        subCoordRanks.resize(m_Partitioning.m_Partitions.size());
 
         for (size_t i = 0; i < m_Partitioning.m_Partitions.size(); ++i)
         {

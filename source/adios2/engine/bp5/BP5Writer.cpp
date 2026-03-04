@@ -386,6 +386,9 @@ void BP5Writer::WriteData(format::BufferV *Data)
         std::cout << " BP5Writer::" << m_Comm.Rank() << "::WriteData() " << std::endl;
     }
 
+    bool rerouting =
+        m_Parameters.EnableWriterRerouting && m_Comm.Size() > 1 && m_Aggregator->m_SubStreams > 1;
+
     if (m_Parameters.AsyncWrite)
     {
         // If a previous async write is still in flight (e.g. from a prior
@@ -429,11 +432,21 @@ void BP5Writer::WriteData(format::BufferV *Data)
             WriteData_EveryoneWrites(Data, false);
             break;
         case (int)AggregationType::EveryoneWritesSerial:
-            WriteData_EveryoneWrites(Data, true);
-            break;
+            if (rerouting)
+            {
+                // If we're really rerouting, our aggregator substream index may
+                // have been changed on the previous timestep. Unlike DSB, we don't
+                // reinitialize our aggregator on every timestep, so here we set the
+                // substream index back to the original value. Then we fall through
+                // to the DataSizeBased case, where WriteData_EveryoneWrites() will
+                // be called if we are not doing rerouting.
+                helper::RankPartition myPart = m_Partitioning.FindPartition(m_RankMPI);
+                m_Aggregator->m_SubStreamIndex = myPart.m_subStreamIndex;
+            }
         case (int)AggregationType::DataSizeBased:
             // First initialize aggregator and transports if we haven't done it yet this step
-            if (!m_AggregatorInitializedThisStep)
+            if (m_Parameters.AggregationType == (int)AggregationType::DataSizeBased &&
+                !m_AggregatorInitializedThisStep)
             {
                 // We can't allow ranks to change subfiles between calls to Put(), so we only
                 // do this initialization once per timestep. Consequently, partition decision
@@ -445,8 +458,7 @@ void BP5Writer::WriteData(format::BufferV *Data)
 
             // For rerouting to be useful, there must be multiple writers sending
             // data to multiple subfiles.
-            if (m_Parameters.EnableWriterRerouting && m_Comm.Size() > 1 &&
-                m_Aggregator->m_SubStreams > 1)
+            if (rerouting)
             {
                 if (!m_MultiBlockWrite)
                 {
@@ -1570,8 +1582,20 @@ void BP5Writer::InitAggregator(const uint64_t DataSize)
         m_Parameters.AggregationType == (int)AggregationType::EveryoneWritesSerial)
     {
         m_Parameters.NumSubFiles = m_Parameters.NumAggregators;
-        m_AggregatorEveroneWrites.Init(m_Parameters.NumAggregators, m_Parameters.NumSubFiles,
-                                       m_Comm);
+
+        std::vector<uint64_t> allSizes;
+        allSizes.resize(m_Comm.Size());
+        m_Partitioning = helper::PartitionRanks(
+            allSizes, m_Parameters.NumSubFiles, helper::PartitioningStrategy::SizeAgnosticPartitioning);
+
+        if (m_RankMPI == 0 && m_Parameters.verbose > 0)
+        {
+            m_Partitioning.PrintSummary();
+        }
+
+        helper::RankPartition myPart = m_Partitioning.FindPartition(m_RankMPI);
+        m_AggregatorEveroneWrites.InitExplicit(myPart.m_subStreams, myPart.m_subStreamIndex,
+                                               myPart.m_aggregatorRank, myPart.m_rankOrder, m_Comm);
         m_IAmDraining = m_AggregatorEveroneWrites.m_IsAggregator;
         m_IAmWritingData = true;
         DataWritingComm = &m_AggregatorEveroneWrites.m_Comm;

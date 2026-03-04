@@ -34,12 +34,14 @@ set(EWS_DIR ${BP5_DIR}/ews)
 set(EW_DIR ${BP5_DIR}/ew)
 set(TLS_DIR ${BP5_DIR}/tls)
 set(DSB_DIR ${BP5_DIR}/dsb)
-set(RR_DIR ${BP5_DIR}/rr)
+set(RR_DSB_DIR ${BP5_DIR}/rr-dsb)
+set(RR_EWS_DIR ${BP5_DIR}/rr-ews)
 file(MAKE_DIRECTORY ${EWS_DIR})
 file(MAKE_DIRECTORY ${EW_DIR})
 file(MAKE_DIRECTORY ${TLS_DIR})
 file(MAKE_DIRECTORY ${DSB_DIR})
-file(MAKE_DIRECTORY ${RR_DIR})
+file(MAKE_DIRECTORY ${RR_DSB_DIR})
+file(MAKE_DIRECTORY ${RR_EWS_DIR})
 
 macro(bp5_gtest_add_tests_helper testname mpi)
   gtest_add_tests_helper(${testname} ${mpi} BP Engine.BP. .BP5
@@ -155,10 +157,20 @@ if (ADIOS2_HAVE_MPI)
     EXTRA_ARGS
       "AggregationType=DataSizeBased,EnableWriterRerouting=false,NumSubFiles=3,verbose=2" "5"
   )
+  gtest_add_tests_helper(DataSizeAggregate MPI_ONLY BP Engine.BP. .BP5.EWS
+    WORKING_DIRECTORY ${EWS_DIR}
+    EXTRA_ARGS
+      "AggregationType=EveryoneWritesSerial,EnableWriterRerouting=false,NumSubFiles=3,verbose=2" "5"
+  )
   gtest_add_tests_helper(DataSizeAggregate MPI_ONLY BP Engine.BP. .BP5.DSB.Rerouting
-    WORKING_DIRECTORY ${RR_DIR}
+    WORKING_DIRECTORY ${RR_DSB_DIR}
     EXTRA_ARGS
       "AggregationType=DataSizeBased,EnableWriterRerouting=true,NumSubFiles=3,verbose=2" "5"
+  )
+  gtest_add_tests_helper(DataSizeAggregate MPI_ONLY BP Engine.BP. .BP5.EWS.Rerouting
+    WORKING_DIRECTORY ${RR_EWS_DIR}
+    EXTRA_ARGS
+      "AggregationType=EveryoneWritesSerial,EnableWriterRerouting=true,NumSubFiles=3,verbose=2" "5"
   )
 endif()
 
@@ -314,7 +326,7 @@ endif()
 macro(bp5agg_gtest_add_tests testname mpi)
   gtest_add_tests_helper(${testname} ${mpi} BP Engine.BPAGG. .BP5.EWS
     WORKING_DIRECTORY ${EWS_DIR}
-    EXTRA_ARGS "BP5" "AggregationType=EveryoneWritesSerial")
+    EXTRA_ARGS "BP5" "AggregationType=EveryoneWritesSerial,EnableWriterRerouting=false")
   gtest_add_tests_helper(${testname} ${mpi} BP Engine.BPAGG. .BP5.EW
     WORKING_DIRECTORY ${EW_DIR}
     EXTRA_ARGS "BP5" "AggregationType=EveryoneWrites")
@@ -325,8 +337,11 @@ macro(bp5agg_gtest_add_tests testname mpi)
     WORKING_DIRECTORY ${DSB_DIR}
     EXTRA_ARGS "BP5" "AggregationType=DataSizeBased,EnableWriterRerouting=false")
   gtest_add_tests_helper(${testname} ${mpi} BP Engine.BPAGG. .BP5.DSB.RR
-    WORKING_DIRECTORY ${RR_DIR}
+    WORKING_DIRECTORY ${RR_DSB_DIR}
     EXTRA_ARGS "BP5" "AggregationType=DataSizeBased,EnableWriterRerouting=true")
+  gtest_add_tests_helper(${testname} ${mpi} BP Engine.BPAGG. .BP5.EWS.RR
+    WORKING_DIRECTORY ${RR_EWS_DIR}
+    EXTRA_ARGS "BP5" "AggregationType=EveryoneWritesSerial,EnableWriterRerouting=true")
 endmacro()
 
 # BP5 only for now, so test all the aggregators while we're at it

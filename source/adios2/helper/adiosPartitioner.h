@@ -53,6 +53,7 @@ struct Partitioning
 enum class PartitioningStrategy
 {
     GreedyNumberPartitioning,
+    SizeAgnosticPartitioning,
     Auto
 };
 

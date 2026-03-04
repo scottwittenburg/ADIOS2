@@ -95,10 +95,54 @@ adios2::helper::Partitioning PartitionGreedily(const std::vector<uint64_t> &valu
 }
 
 /**
+ * Ignore the contents of the values, we only care about the number of them (that
+ * is the number of ranks). Partition those ranks into bins by rank id, just as
+ * MPIAggregator::InitComm() does.
+ */
+adios2::helper::Partitioning PartitionBasically(const std::vector<uint64_t> &values,
+                                               uint64_t numberOfPartitions)
+{
+  adios2::helper::Partitioning result;
+
+  result.m_Partitions.resize(numberOfPartitions);
+  result.m_Sizes.resize(numberOfPartitions);
+
+  // Divide the processes into S=numberOfPartitions groups.
+  const size_t processes = values.size();
+  const size_t q = processes / numberOfPartitions;
+  const size_t r = processes % numberOfPartitions;
+
+  // Groups [0,r) have size q+1.  Groups [r,S) have size q.
+  const size_t firstInSmallGroups = r * (q + 1);
+
+  size_t subStreamIndex;
+
+  for (size_t process = 0; process < processes; ++process)
+  {
+    // Compute this rank's substream index
+    if (process >= firstInSmallGroups)
+    {
+        subStreamIndex = r + (process - firstInSmallGroups) / q;
+    }
+    else
+    {
+        subStreamIndex = process / (q + 1);
+    }
+
+    // Add this rank to correct substream
+    result.m_Partitions[subStreamIndex].push_back(process);
+  }
+
+  return result;
+}
+
+/**
  * Registry of known partitioning strategies
  */
 std::map<adios2::helper::PartitioningStrategy, Partitioner> strategies = {
-    {adios2::helper::PartitioningStrategy::GreedyNumberPartitioning, PartitionGreedily}};
+    {adios2::helper::PartitioningStrategy::GreedyNumberPartitioning, PartitionGreedily},
+    {adios2::helper::PartitioningStrategy::SizeAgnosticPartitioning, PartitionBasically}
+};
 
 /**
  * Return the function implementing the given strategy, or raise an exception
