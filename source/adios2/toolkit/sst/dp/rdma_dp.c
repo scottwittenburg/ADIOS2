@@ -1269,6 +1269,43 @@ static int get_cxi_auth_key_from_writer(struct cxi_auth_key *key, attr_list Writ
     key->vni = (uint16_t)vni;
     return EXIT_SUCCESS;
 }
+
+/*
+ * Returns 1 if `writer_vni` appears in the comma-separated SLINGSHOT_VNIS env
+ * value (e.g. "4576,4530"), 0 otherwise.  If SLINGSHOT_VNIS is unset, returns 0.
+ */
+static int writer_vni_in_local_env(uint16_t writer_vni)
+{
+    char const *vni_env_str = getenv("SLINGSHOT_VNIS");
+    if (!vni_env_str)
+    {
+        return 0;
+    }
+    char const *p = vni_env_str;
+    while (*p)
+    {
+        char *end = NULL;
+        long v = strtol(p, &end, 10);
+        if (end == p)
+        {
+            break;
+        }
+        if ((uint16_t)v == writer_vni)
+        {
+            return 1;
+        }
+        p = end;
+        if (*p == ',')
+        {
+            ++p;
+        }
+        else
+        {
+            break;
+        }
+    }
+    return 0;
+}
 #endif
 
 typedef enum
@@ -1473,6 +1510,24 @@ static DP_RS_Stream RdmaInitReader(CP_Services Svcs, void *CP_Stream, void **Rea
     {
         Svcs->verbose(CP_Stream, DPSummaryVerbose, "Reader found CXI auth key: %d %d\n",
                       tagged_key.key.vni, tagged_key.key.svc_id);
+        if (Stream->Rank == 0 && !writer_vni_in_local_env(tagged_key.key.vni))
+        {
+            char const *local_vnis = getenv("SLINGSHOT_VNIS");
+            Svcs->verbose(CP_Stream, DPCriticalVerbose,
+                          "WARNING: SST RDMA DataPlane: writer's CXI VNI %u is not "
+                          "present in this process's SLINGSHOT_VNIS=\"%s\".  "
+                          "The kernel CXI driver will refuse to open a fabric with "
+                          "a VNI not allocated to this job, so libfabric fi_getinfo() "
+                          "is expected to fail with -61 (No data available) and the "
+                          "reader open will not complete.  On HPE Cray EX systems "
+                          "(Perlmutter, Frontier) Slingshot VNIs are per-allocation "
+                          "and there is no supported mechanism to share a VNI across "
+                          "two independent Slurm jobs.  Launch writer and reader in "
+                          "the same Slurm allocation: as multiple srun steps in one "
+                          "job, as a single MPMD srun (writer : reader), or as a "
+                          "Slurm heterogeneous job.\n",
+                          (unsigned)tagged_key.key.vni, local_vnis ? local_vnis : "(unset)");
+        }
         Stream->Fabric->cxi_auth_key = calloc(1, sizeof(struct cxi_auth_key));
         memcpy(Stream->Fabric->cxi_auth_key, &tagged_key.key, sizeof(struct cxi_auth_key));
     }
@@ -2569,6 +2624,29 @@ static int RdmaGetPriority(CP_Services Svcs, void *CP_Stream, struct _SstParams 
     hints->ep_attr->type = FI_EP_RDM;
 
     char const *vni_env_str = getenv("SLINGSHOT_VNIS");
+
+#ifdef SST_HAVE_CRAY_CXI
+    if (!vni_env_str)
+    {
+        static int warned_no_vni = 0;
+        if (!warned_no_vni)
+        {
+            warned_no_vni = 1;
+            Svcs->verbose(
+                CP_Stream, DPCriticalVerbose,
+                "WARNING: SST RDMA DataPlane: this build supports Cray CXI/Slingshot, but "
+                "SLINGSHOT_VNIS is not set in this process's environment.  On HPE Cray EX "
+                "systems (Perlmutter, Frontier) Slingshot VNIs are allocated by the launcher; "
+                "if you intended to use RDMA, ensure the job was launched via "
+                "'srun --network=...vni...' (e.g. job_vni,single_node_vni) rather than directly "
+                "on a login node or without the --network flag.  Declining RDMA DP priority; "
+                "SST will fall back to another DataPlane (typically evpath/sockets), which on "
+                "this machine will not use Slingshot RDMA.\n");
+        }
+        fi_freeinfo(hints);
+        return -1;
+    }
+#endif
 
     uint32_t fi_version;
     if (vni_env_str)
