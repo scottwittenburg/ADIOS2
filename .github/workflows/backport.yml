@@ -44,7 +44,7 @@ jobs:
 
           git checkout --track "origin/${BRANCH}"
           git checkout -b "backport-to-${BRANCH}-${PR}"
-          git cherry-pick --mainline 1 -x "${commit_hash}"
+          gh pr view --json commits --jq '.commits[].oid' "${PR}" | xargs -n1 git cherry-pick --mainline 1 -x 
           git push -f https://github.com/ornladios-robot/ADIOS2.git "backport-to-${BRANCH}-${PR}"
           gh api repos/ornladios/ADIOS2/pulls \
             --method POST \
